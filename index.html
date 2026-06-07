@@ -6,69 +6,73 @@
 <meta name="theme-color" content="#000000" />
 <title>€asyPOS</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
-
 <style>
-  :root{
-    --bg:#000000; --bg2:#1c1c1e; --bg3:#2c2c2e;
-    --ink:#ffffff; --muted:#8d8d93; --line:#38383a;
-    --accent:#0a84ff; --ok:#30d158; --err:#ff453a; --r:14px;
-  }
+  :root{--bg:#000;--bg2:#1c1c1e;--bg3:#2c2c2e;--ink:#fff;--muted:#8d8d93;--line:#38383a;--accent:#0a84ff;--ok:#30d158;--err:#ff453a;--r:14px;}
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}
-  body{background:var(--bg);color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
-    -webkit-font-smoothing:antialiased;
-    display:flex;align-items:flex-start;justify-content:center;
-    padding:max(28px,env(safe-area-inset-top)) 18px 40px;min-height:100dvh;}
-  .wrap{width:100%;max-width:460px;margin-top:4vh}
-  .brand{margin-bottom:22px;text-align:center}
-  .logo-note{width:200px;max-width:62%;height:auto;color:#fff;display:inline-block}
+  body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;-webkit-font-smoothing:antialiased;display:flex;align-items:flex-start;justify-content:center;padding:max(24px,env(safe-area-inset-top)) 16px 40px;min-height:100dvh;}
+  .wrap{width:100%;max-width:480px;margin-top:3vh}
+  .brand{margin-bottom:18px;text-align:center}
+  .logo-note{width:180px;max-width:56%;height:auto;color:#fff;display:inline-block}
   .wmtext{font-family:'Quicksand',sans-serif}
-  .card{background:var(--bg2);border-radius:var(--r);padding:22px 18px;margin-bottom:16px}
-  h1{font-weight:700;font-size:22px;margin-bottom:4px;letter-spacing:-.01em}
+  .card{background:var(--bg2);border-radius:var(--r);padding:20px 16px;margin-bottom:16px}
+  h1{font-weight:700;font-size:22px;margin-bottom:4px}
   .sub{color:var(--muted);font-size:14px;margin-bottom:18px}
   label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:14px 0 6px}
-  input,select{width:100%;padding:13px 14px;border:none;border-radius:10px;font:inherit;font-size:16px;
-    background:var(--bg3);color:var(--ink);outline:none;transition:box-shadow .15s;-webkit-appearance:none;appearance:none}
-  input::placeholder{color:#6b6b70}
+  input,select{width:100%;padding:13px 14px;border:none;border-radius:10px;font:inherit;font-size:16px;background:var(--bg3);color:var(--ink);outline:none;-webkit-appearance:none;appearance:none}
   input:focus,select:focus{box-shadow:0 0 0 3px rgba(10,132,255,.35)}
-  select{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%238d8d93' stroke-width='2' fill='none' stroke-linecap='round'/></svg>");
-    background-repeat:no-repeat;background-position:right 14px center;padding-right:34px}
+  input::placeholder{color:#6b6b70}
+  select{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%238d8d93' stroke-width='2' fill='none' stroke-linecap='round'/></svg>");background-repeat:no-repeat;background-position:right 14px center;padding-right:34px}
   button{font:inherit;cursor:pointer;border:none}
-  .btn{width:100%;margin-top:18px;padding:14px;border-radius:11px;background:var(--accent);color:#fff;font-weight:600;font-size:17px;transition:opacity .12s,transform .05s}
-  .btn:active{transform:translateY(1px);opacity:.85}
-  .btn:disabled{opacity:.5}
-  .btn.ghost{background:var(--bg3);color:var(--accent);width:auto;margin-top:0;padding:9px 15px;font-size:15px;border-radius:9px}
-  .btn.sm{width:auto;margin-top:0;padding:13px 16px;font-size:15px;border-radius:10px;flex:none}
+  .btn{width:100%;margin-top:18px;padding:14px;border-radius:11px;background:var(--accent);color:#fff;font-weight:600;font-size:17px}
+  .btn:active{opacity:.85}.btn:disabled{opacity:.4}
+  .btn.ghost{background:var(--bg3);color:var(--accent);width:auto;margin:0;padding:9px 14px;font-size:15px;border-radius:9px}
+  .btn.sm{width:auto;margin:0;padding:13px 16px;font-size:15px;border-radius:10px;flex:none}
+  .btn.ok{background:var(--ok)}
   .msg{margin-top:14px;font-size:14px;padding:11px 13px;border-radius:10px;display:none}
-  .msg.show{display:block}
-  .msg.err{background:rgba(255,69,58,.16);color:var(--err)}
-  .msg.ok{background:rgba(48,209,88,.16);color:var(--ok)}
+  .msg.show{display:block}.msg.err{background:rgba(255,69,58,.16);color:var(--err)}.msg.ok{background:rgba(48,209,88,.16);color:var(--ok)}
   .hidden{display:none!important}
   .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:12px}
   .who{font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .who b{color:var(--ink);font-weight:600}
-  .section-t{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:6px 0 10px;padding:0 2px}
-  .row-add{display:flex;gap:8px;align-items:stretch}
-  .row-add input{flex:1}
-  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .seg{display:flex;background:var(--bg3);border-radius:11px;padding:3px;margin:14px 0 2px}
+  .seg button{flex:1;padding:10px;border-radius:9px;background:transparent;color:var(--muted);font-weight:600;font-size:15px}
+  .seg button.on{background:var(--accent);color:#fff}
+  .today{font-size:13px;color:var(--muted);margin:10px 2px 2px}
+  .today b{color:var(--ok);font-weight:700}
+  .section-t{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:16px 0 10px;padding:0 2px}
+  .filter{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px}
+  .fchip{background:var(--bg3);border-radius:999px;padding:7px 13px;font-size:13px;font-weight:600;color:var(--muted)}
+  .fchip.on{background:var(--accent);color:#fff}
+  .grid-prod{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .tile{background:var(--bg3);border-radius:12px;padding:13px 12px;text-align:left;display:flex;flex-direction:column;gap:6px;min-height:72px;justify-content:space-between;color:var(--ink);width:100%}
+  .tile:active{transform:scale(.97);background:#3a3a3c}
+  .tile .tn{font-weight:600;font-size:15px;line-height:1.2}
+  .tile .tp{font-weight:700;font-size:15px;color:var(--accent)}
+  .cart-line{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+  .cart-line .cn{flex:1;font-size:15px;font-weight:600}
+  .cart-line .lt{font-weight:700;min-width:60px;text-align:right;font-size:15px}
+  .stepper{display:flex;align-items:center;background:var(--bg3);border-radius:9px;overflow:hidden}
+  .stepper button{width:32px;height:32px;background:transparent;color:var(--accent);font-size:19px;font-weight:700}
+  .stepper .q{min-width:28px;text-align:center;font-weight:600}
+  .total-row{display:flex;justify-content:space-between;align-items:center;margin-top:16px}
+  .total-row span{color:var(--muted);font-size:15px}
+  .total-row b{font-size:26px}
   .chips{display:flex;flex-wrap:wrap;gap:8px}
-  .chip{background:var(--bg3);border-radius:999px;padding:7px 13px;font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:8px}
+  .chip{background:var(--bg3);border-radius:999px;padding:7px 13px;font-size:14px;font-weight:600;display:inline-flex;gap:8px}
   .chip .x{color:var(--muted);font-weight:700;cursor:pointer}
+  .row-add{display:flex;gap:8px}.row-add input{flex:1}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .item{display:flex;align-items:center;gap:12px;padding:12px 13px;border-radius:11px;margin-bottom:8px;background:var(--bg3)}
-  .item .nm{font-weight:600;font-size:16px}
-  .item .meta{font-size:13px;color:var(--muted);margin-top:1px}
-  .item .pr{margin-left:auto;font-weight:700;font-size:16px;white-space:nowrap}
-  .item .x{color:var(--muted);font-weight:700;cursor:pointer;padding-left:6px}
+  .item .nm{font-weight:600;font-size:16px}.item .meta{font-size:13px;color:var(--muted);margin-top:1px}
+  .item .pr{margin-left:auto;font-weight:700;white-space:nowrap}.item .x{color:var(--muted);font-weight:700;cursor:pointer;padding-left:6px}
   .empty{color:var(--muted);font-size:14px;padding:14px;border:1px dashed var(--line);border-radius:11px;text-align:center}
-  details{margin-top:8px;border-top:1px solid var(--line);padding-top:8px}
+  details{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}
   summary{color:var(--accent);font-size:14px;font-weight:600;cursor:pointer;padding:8px 0;list-style:none}
   summary::-webkit-details-marker{display:none}
   .cfgwarn{background:rgba(255,69,58,.16);color:var(--err);padding:14px;border-radius:11px;font-size:14px;line-height:1.5}
@@ -86,17 +90,12 @@
     </svg>
   </div>
 
-  <div class="card hidden" id="cfgView">
-    <div class="cfgwarn">还没读到 Supabase 配置。请确认 <b>config.js</b> 和 index.html 在同一文件夹,并填了 Project URL 和 anon 钥匙。</div>
-  </div>
+  <div class="card hidden" id="cfgView"><div class="cfgwarn">还没读到 Supabase 配置。请确认 <b>config.js</b> 和 index.html 在同一文件夹并填了值。</div></div>
 
   <div class="card hidden" id="loginView">
-    <h1>登录</h1>
-    <div class="sub">用你在 Supabase 建的账户登录</div>
-    <label>邮箱</label>
-    <input id="email" type="email" autocomplete="username" placeholder="you@example.com" />
-    <label>密码</label>
-    <input id="password" type="password" autocomplete="current-password" placeholder="••••••••" />
+    <h1>登录</h1><div class="sub">用你在 Supabase 建的账户登录</div>
+    <label>邮箱</label><input id="email" type="email" autocomplete="username" placeholder="you@example.com" />
+    <label>密码</label><input id="password" type="password" autocomplete="current-password" placeholder="••••••••" />
     <button class="btn" id="loginBtn">登录</button>
     <div class="msg err" id="loginMsg"></div>
   </div>
@@ -106,194 +105,242 @@
       <div class="who">账户:<b id="userEmail">—</b></div>
       <button class="btn ghost" id="logoutBtn">退出</button>
     </div>
-    <label>当前店铺</label>
-    <select id="storeSel"></select>
+    <label>当前店铺</label><select id="storeSel"></select>
+    <div class="seg"><button id="tabSell" class="on">收银</button><button id="tabMenu">菜单</button></div>
 
-    <div class="section-t" style="margin-top:20px">分类</div>
-    <div class="row-add">
-      <input id="catName" placeholder="如:咖啡 / 早午餐 / 甜点" />
-      <button class="btn sm" id="addCatBtn">添加</button>
-    </div>
-    <div class="chips" id="catList" style="margin-top:12px"></div>
+    <!-- ===== 收银 ===== -->
+    <div id="sellTab">
+      <div class="today" id="today">今日:€0.00 · 0 单</div>
+      <div class="filter" id="catFilter"></div>
+      <div class="grid-prod" id="prodGrid"></div>
 
-    <div class="section-t" style="margin-top:22px">菜品</div>
-    <label>名称</label>
-    <input id="pName" placeholder="如:Cappuccino" />
-    <div class="row2">
-      <div><label>价格 €</label><input id="pPrice" type="number" inputmode="decimal" step="0.01" placeholder="0.00" /></div>
-      <div><label>单位</label><select id="pUnit"><option value="piece">计件</option><option value="weight">称重</option></select></div>
-    </div>
-    <label>分类</label>
-    <select id="pCat"></select>
-    <button class="btn" id="addProdBtn">添加菜品</button>
-    <div class="msg" id="menuMsg"></div>
-    <div id="prodList" style="margin-top:14px"></div>
+      <div class="section-t">购物车</div>
+      <div id="cart"></div>
+      <div class="total-row"><span>合计</span><b id="cartTotal">€0.00</b></div>
+      <button class="btn" id="checkoutBtn" disabled>结账</button>
 
-    <details>
-      <summary>店铺设置 / 添加店铺</summary>
-      <label>店铺名称(显示名)</label>
-      <input id="storeName" placeholder="例如:Fluffy Brunch" />
-      <label>公司名称(开票法定名 / Ragione sociale)</label>
-      <input id="storeCompany" placeholder="例如:Fluffy Brunch S.r.l." />
-      <div class="row2">
-        <div><label>地址(可选)</label><input id="storeAddr" placeholder="Venezia…" /></div>
-        <div><label>P.IVA(可选)</label><input id="storeVat" placeholder="IT…" /></div>
+      <div id="checkoutPanel" class="hidden" style="margin-top:14px">
+        <label>收到现金 €</label>
+        <input id="cashInput" type="number" inputmode="decimal" step="0.01" placeholder="0.00" />
+        <div class="total-row"><span>找零</span><b id="changeOut">€0.00</b></div>
+        <button class="btn ok" id="finishBtn">完成收款</button>
+        <button class="btn ghost" id="cancelCheckout" style="width:100%;margin-top:10px;text-align:center">取消</button>
+        <div class="msg" id="payMsg"></div>
       </div>
-      <button class="btn" id="addStoreBtn">添加店铺</button>
-      <div class="msg" id="storeMsg"></div>
-    </details>
-  </div>
+    </div>
 
+    <!-- ===== 菜单 ===== -->
+    <div id="menuTab" class="hidden">
+      <div class="section-t">分类</div>
+      <div class="row-add"><input id="catName" placeholder="如:咖啡 / 早午餐 / 甜点" /><button class="btn sm" id="addCatBtn">添加</button></div>
+      <div class="chips" id="catList" style="margin-top:12px"></div>
+
+      <div class="section-t">菜品</div>
+      <label>名称</label><input id="pName" placeholder="如:Cappuccino" />
+      <div class="row2">
+        <div><label>价格 €</label><input id="pPrice" type="number" inputmode="decimal" step="0.01" placeholder="0.00" /></div>
+        <div><label>单位</label><select id="pUnit"><option value="piece">计件</option><option value="weight">称重</option></select></div>
+      </div>
+      <label>分类</label><select id="pCat"></select>
+      <button class="btn" id="addProdBtn">添加菜品</button>
+      <div class="msg" id="menuMsg"></div>
+      <div id="prodList" style="margin-top:14px"></div>
+
+      <details>
+        <summary>店铺设置 / 添加店铺</summary>
+        <label>店铺名称(显示名)</label><input id="storeName" placeholder="例如:Fluffy Brunch" />
+        <label>公司名称(开票法定名 / Ragione sociale)</label><input id="storeCompany" placeholder="例如:Fluffy Brunch S.r.l." />
+        <div class="row2"><div><label>地址(可选)</label><input id="storeAddr" placeholder="Venezia…" /></div><div><label>P.IVA(可选)</label><input id="storeVat" placeholder="IT…" /></div></div>
+        <button class="btn" id="addStoreBtn">添加店铺</button>
+        <div class="msg" id="storeMsg"></div>
+      </details>
+    </div>
+  </div>
 </div>
 
 <script>
-  const $ = (id) => document.getElementById(id);
-  const show = (el,t,k)=>{el.textContent=t;el.className="msg show "+(k||"");};
-  const hide = (el)=>{el.className="msg";};
-  const money = (n)=> "€"+Number(n||0).toFixed(2);
-  const unitLabel = (u)=> u==="weight" ? "称重" : "计件";
+  const $=(id)=>document.getElementById(id);
+  const show=(el,t,k)=>{el.textContent=t;el.className="msg show "+(k||"");};
+  const hide=(el)=>{el.className="msg";};
+  const money=(n)=>"€"+Number(n||0).toFixed(2);
+  const unitLabel=(u)=>u==="weight"?"称重":"计件";
   function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 
   if(!window.SUPA_URL||!window.SUPA_KEY||window.SUPA_URL.includes("你的")||window.SUPA_KEY.includes("你的")){
     $("cfgView").classList.remove("hidden"); throw new Error("config missing");
   }
-  const sb = supabase.createClient(window.SUPA_URL, window.SUPA_KEY);
-  let stores = [], categories = [];
-  const storeId = ()=> $("storeSel").value || null;
+  const sb=supabase.createClient(window.SUPA_URL,window.SUPA_KEY);
+  let stores=[], categories=[], products=[], cart=[], filterCat="all";
+  const storeId=()=>$("storeSel").value||null;
 
   async function render(){
-    const { data:{session} } = await sb.auth.getSession();
+    const {data:{session}}=await sb.auth.getSession();
     if(session){
-      $("loginView").classList.add("hidden");
-      $("appView").classList.remove("hidden");
-      $("userEmail").textContent = session.user.email;
-      await loadStores();
-    } else {
-      $("appView").classList.add("hidden");
-      $("loginView").classList.remove("hidden");
-    }
+      $("loginView").classList.add("hidden"); $("appView").classList.remove("hidden");
+      $("userEmail").textContent=session.user.email; await loadStores();
+    } else { $("appView").classList.add("hidden"); $("loginView").classList.remove("hidden"); }
   }
-
-  $("loginBtn").onclick = async ()=>{
-    hide($("loginMsg"));
-    const b=$("loginBtn"); b.disabled=true; b.textContent="登录中…";
-    const { error } = await sb.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});
+  $("loginBtn").onclick=async()=>{
+    hide($("loginMsg")); const b=$("loginBtn"); b.disabled=true; b.textContent="登录中…";
+    const {error}=await sb.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});
     b.disabled=false; b.textContent="登录";
-    if(error){ show($("loginMsg"),"登录失败:"+error.message,"err"); return; }
-    render();
+    if(error){show($("loginMsg"),"登录失败:"+error.message,"err");return;} render();
   };
-  $("logoutBtn").onclick = async ()=>{ await sb.auth.signOut(); render(); };
+  $("logoutBtn").onclick=async()=>{await sb.auth.signOut(); render();};
+
+  // 标签切换
+  $("tabSell").onclick=()=>switchTab("sell");
+  $("tabMenu").onclick=()=>switchTab("menu");
+  function switchTab(t){
+    $("tabSell").classList.toggle("on",t==="sell");
+    $("tabMenu").classList.toggle("on",t==="menu");
+    $("sellTab").classList.toggle("hidden",t!=="sell");
+    $("menuTab").classList.toggle("hidden",t!=="menu");
+  }
 
   async function loadStores(){
-    const { data, error } = await sb.from("stores").select("*").order("created_at",{ascending:true});
-    if(error){ return; }
-    stores = data||[];
+    const {data,error}=await sb.from("stores").select("*").order("created_at");
+    if(error)return; stores=data||[];
     const sel=$("storeSel");
-    if(!stores.length){
-      sel.innerHTML='<option value="">（请先在下方添加店铺）</option>';
-      $("catList").innerHTML=""; $("prodList").innerHTML="";
-      return;
-    }
-    sel.innerHTML = stores.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("");
-    await loadMenu();
+    if(!stores.length){ sel.innerHTML='<option value="">（请先在「菜单」里添加店铺）</option>'; clearAll(); return; }
+    sel.innerHTML=stores.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("");
+    await reloadStore();
   }
-  $("storeSel").onchange = loadMenu;
-
-  async function loadMenu(){ await loadCategories(); await loadProducts(); }
+  $("storeSel").onchange=reloadStore;
+  function clearAll(){ $("prodGrid").innerHTML=""; $("prodList").innerHTML=""; $("catList").innerHTML=""; cart=[]; renderCart(); }
+  async function reloadStore(){ cart=[]; renderCart(); await loadCategories(); await loadProducts(); await loadToday(); }
 
   async function loadCategories(){
-    const sid=storeId(); if(!sid){return;}
-    const { data, error } = await sb.from("categories").select("*").eq("store_id",sid).order("sort_order").order("created_at");
-    categories = error?[]:(data||[]);
-    // 分类标签
-    $("catList").innerHTML = categories.length
-      ? categories.map(c=>`<span class="chip">${esc(c.name)} <span class="x" data-cat="${c.id}">✕</span></span>`).join("")
-      : '<div class="empty" style="width:100%">还没有分类,先加一个</div>';
-    // 菜品表单的分类下拉
-    $("pCat").innerHTML = '<option value="">（无分类）</option>' + categories.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join("");
-    document.querySelectorAll('#catList .x').forEach(x=> x.onclick = ()=> delCategory(x.dataset.cat));
+    const sid=storeId(); if(!sid)return;
+    const {data,error}=await sb.from("categories").select("*").eq("store_id",sid).order("sort_order").order("created_at");
+    categories=error?[]:(data||[]);
+    $("catList").innerHTML=categories.length?categories.map(c=>`<span class="chip">${esc(c.name)} <span class="x" data-cat="${c.id}">✕</span></span>`).join(""):'<div class="empty" style="width:100%">还没有分类</div>';
+    $("pCat").innerHTML='<option value="">（无分类）</option>'+categories.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join("");
+    document.querySelectorAll('#catList .x').forEach(x=>x.onclick=()=>delCategory(x.dataset.cat));
+    renderFilter();
+  }
+  function renderFilter(){
+    const f=$("catFilter");
+    let html=`<span class="fchip ${filterCat==='all'?'on':''}" data-f="all">全部</span>`;
+    html+=categories.map(c=>`<span class="fchip ${filterCat===c.id?'on':''}" data-f="${c.id}">${esc(c.name)}</span>`).join("");
+    f.innerHTML=html;
+    f.querySelectorAll('.fchip').forEach(ch=>ch.onclick=()=>{filterCat=ch.dataset.f; renderFilter(); renderGrid();});
   }
 
   async function loadProducts(){
-    const sid=storeId(); if(!sid){return;}
-    const { data, error } = await sb.from("products").select("*, categories(name)").eq("store_id",sid).order("created_at");
+    const sid=storeId(); if(!sid)return;
+    const {data,error}=await sb.from("products").select("*, categories(name)").eq("store_id",sid).order("created_at");
+    products=error?[]:(data||[]);
+    // 菜单列表
     const list=$("prodList");
-    if(error){ list.innerHTML='<div class="empty">读取出错:'+esc(error.message)+'</div>'; return; }
-    if(!data||!data.length){ list.innerHTML='<div class="empty">还没有菜品</div>'; return; }
-    list.innerHTML = data.map(p=>{
-      const meta=[p.categories?.name, unitLabel(p.unit)].filter(Boolean).map(esc).join(" · ");
-      return `<div class="item">
-        <div><div class="nm">${esc(p.name)}</div><div class="meta">${meta}</div></div>
-        <div class="pr">${money(p.price)}</div>
-        <span class="x" data-prod="${p.id}">✕</span>
-      </div>`;
-    }).join("");
-    document.querySelectorAll('#prodList .x').forEach(x=> x.onclick = ()=> delProduct(x.dataset.prod));
+    list.innerHTML=products.length?products.map(p=>{
+      const meta=[p.categories?.name,unitLabel(p.unit)].filter(Boolean).map(esc).join(" · ");
+      return `<div class="item"><div><div class="nm">${esc(p.name)}</div><div class="meta">${meta}</div></div><div class="pr">${money(p.price)}</div><span class="x" data-prod="${p.id}">✕</span></div>`;
+    }).join(""):'<div class="empty">还没有菜品</div>';
+    list.querySelectorAll('.x').forEach(x=>x.onclick=()=>delProduct(x.dataset.prod));
+    renderGrid();
+  }
+  function renderGrid(){
+    const g=$("prodGrid");
+    let ps=products.filter(p=>p.active!==false);
+    if(filterCat!=="all") ps=ps.filter(p=>p.category_id===filterCat);
+    if(!ps.length){ g.innerHTML='<div class="empty" style="grid-column:1/-1">没有菜品,去「菜单」添加</div>'; return; }
+    g.innerHTML=ps.map(p=>`<button class="tile" data-id="${p.id}"><span class="tn">${esc(p.name)}</span><span class="tp">${money(p.price)}</span></button>`).join("");
+    g.querySelectorAll('.tile').forEach(t=>t.onclick=()=>addToCart(t.dataset.id));
   }
 
-  $("addCatBtn").onclick = async ()=>{
-    const sid=storeId(); const name=$("catName").value.trim();
-    if(!sid){ alert("请先添加并选择一个店铺"); return; }
-    if(!name) return;
-    const b=$("addCatBtn"); b.disabled=true;
-    const { error } = await sb.from("categories").insert({store_id:sid,name});
-    b.disabled=false;
-    if(error){ alert("添加分类失败:"+error.message); return; }
-    $("catName").value=""; loadCategories();
-  };
-
-  async function delCategory(id){
-    if(!confirm("删除这个分类?(分类下的菜品不会删,只是变成无分类)")) return;
-    const { error } = await sb.from("categories").delete().eq("id",id);
-    if(error){ alert("删除失败:"+error.message); return; }
-    loadMenu();
+  // 购物车
+  function addToCart(pid){
+    const p=products.find(x=>x.id===pid); if(!p)return;
+    const line=cart.find(l=>l.product_id===pid);
+    if(line) line.qty++; else cart.push({product_id:p.id,name:p.name,price:Number(p.price),qty:1});
+    renderCart();
+  }
+  function changeQty(pid,d){
+    const line=cart.find(l=>l.product_id===pid); if(!line)return;
+    line.qty+=d; if(line.qty<=0) cart=cart.filter(l=>l!==line); renderCart();
+  }
+  function cartTotal(){ return cart.reduce((s,l)=>s+l.price*l.qty,0); }
+  function renderCart(){
+    const c=$("cart");
+    if(!cart.length){ c.innerHTML='<div class="empty">点上面的菜品加入</div>'; }
+    else{
+      c.innerHTML=cart.map(l=>`<div class="cart-line">
+        <span class="cn">${esc(l.name)}</span>
+        <span class="stepper"><button data-m="${l.product_id}">−</button><span class="q">${l.qty}</span><button data-p="${l.product_id}">+</button></span>
+        <span class="lt">${money(l.price*l.qty)}</span></div>`).join("");
+      c.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>changeQty(b.dataset.m,-1));
+      c.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>changeQty(b.dataset.p,1));
+    }
+    $("cartTotal").textContent=money(cartTotal());
+    $("checkoutBtn").disabled=cart.length===0;
+    if(cart.length===0){ $("checkoutPanel").classList.add("hidden"); }
   }
 
-  $("addProdBtn").onclick = async ()=>{
-    hide($("menuMsg"));
+  // 结账
+  $("checkoutBtn").onclick=()=>{ hide($("payMsg")); $("checkoutPanel").classList.remove("hidden"); $("cashInput").value=""; $("changeOut").textContent=money(0); $("cashInput").focus(); };
+  $("cancelCheckout").onclick=()=>$("checkoutPanel").classList.add("hidden");
+  $("cashInput").oninput=()=>{ const ch=parseFloat($("cashInput").value)-cartTotal(); $("changeOut").textContent=money(isNaN(ch)?0:Math.max(0,ch)); };
+
+  $("finishBtn").onclick=async()=>{
+    hide($("payMsg"));
+    const total=cartTotal(); const cash=parseFloat($("cashInput").value);
+    if(isNaN(cash)||cash<total){ show($("payMsg"),"收到的现金不够(合计 "+money(total)+")","err"); return; }
+    const b=$("finishBtn"); b.disabled=true; b.textContent="保存中…";
     const sid=storeId();
-    if(!sid){ show($("menuMsg"),"请先添加并选择一个店铺","err"); return; }
-    const name=$("pName").value.trim();
-    const price=parseFloat($("pPrice").value);
-    if(!name){ show($("menuMsg"),"请填菜品名称","err"); return; }
-    if(isNaN(price)){ show($("menuMsg"),"请填价格","err"); return; }
-    const b=$("addProdBtn"); b.disabled=true; b.textContent="添加中…";
-    const { error } = await sb.from("products").insert({
-      store_id:sid, name, price,
-      unit:$("pUnit").value,
-      category_id: $("pCat").value || null
-    });
-    b.disabled=false; b.textContent="添加菜品";
-    if(error){ show($("menuMsg"),"添加失败:"+error.message,"err"); return; }
-    show($("menuMsg"),"已添加 ✓","ok");
-    $("pName").value=""; $("pPrice").value="";
-    loadProducts();
+    const {data:order,error}=await sb.from("orders").insert({store_id:sid,total:+total.toFixed(2),payment_method:"cash",cash_received:cash,change_given:+(cash-total).toFixed(2),status:"completed"}).select().single();
+    if(error){ b.disabled=false; b.textContent="完成收款"; show($("payMsg"),"保存失败:"+error.message,"err"); return; }
+    const items=cart.map(l=>({order_id:order.id,product_id:l.product_id,name:l.name,price:l.price,qty:l.qty,line_total:+(l.price*l.qty).toFixed(2)}));
+    const {error:e2}=await sb.from("order_items").insert(items);
+    b.disabled=false; b.textContent="完成收款";
+    if(e2){ show($("payMsg"),"明细保存失败:"+e2.message,"err"); return; }
+    const change=cash-total;
+    cart=[]; renderCart(); $("checkoutPanel").classList.add("hidden");
+    await loadToday();
+    show($("payMsg"),"✓ 完成 · 找零 "+money(change),"ok");
+    $("payMsg").classList.remove("hidden");
+    setTimeout(()=>hide($("payMsg")),4000);
   };
 
-  async function delProduct(id){
-    if(!confirm("删除这个菜品?")) return;
-    const { error } = await sb.from("products").delete().eq("id",id);
-    if(error){ alert("删除失败:"+error.message); return; }
-    loadProducts();
+  async function loadToday(){
+    const sid=storeId(); if(!sid)return;
+    const start=new Date(); start.setHours(0,0,0,0);
+    const {data,error}=await sb.from("orders").select("total").eq("store_id",sid).gte("created_at",start.toISOString());
+    if(error){return;}
+    const sum=(data||[]).reduce((s,o)=>s+Number(o.total),0);
+    $("today").innerHTML=`今日:<b>${money(sum)}</b> · ${(data||[]).length} 单`;
   }
 
-  $("addStoreBtn").onclick = async ()=>{
-    hide($("storeMsg"));
-    const name=$("storeName").value.trim();
-    if(!name){ show($("storeMsg"),"请填店铺名称","err"); return; }
+  // 菜单管理
+  $("addCatBtn").onclick=async()=>{
+    const sid=storeId(); const name=$("catName").value.trim();
+    if(!sid){alert("请先添加并选择店铺");return;} if(!name)return;
+    const {error}=await sb.from("categories").insert({store_id:sid,name});
+    if(error){alert("失败:"+error.message);return;} $("catName").value=""; loadCategories();
+  };
+  async function delCategory(id){ if(!confirm("删除这个分类?(菜品不删,只是变无分类)"))return; const {error}=await sb.from("categories").delete().eq("id",id); if(error){alert(error.message);return;} await loadCategories(); loadProducts(); }
+  $("addProdBtn").onclick=async()=>{
+    hide($("menuMsg")); const sid=storeId();
+    if(!sid){show($("menuMsg"),"请先添加并选择店铺","err");return;}
+    const name=$("pName").value.trim(); const price=parseFloat($("pPrice").value);
+    if(!name){show($("menuMsg"),"请填名称","err");return;}
+    if(isNaN(price)){show($("menuMsg"),"请填价格","err");return;}
+    const b=$("addProdBtn"); b.disabled=true; b.textContent="添加中…";
+    const {error}=await sb.from("products").insert({store_id:sid,name,price,unit:$("pUnit").value,category_id:$("pCat").value||null});
+    b.disabled=false; b.textContent="添加菜品";
+    if(error){show($("menuMsg"),"失败:"+error.message,"err");return;}
+    show($("menuMsg"),"已添加 ✓","ok"); $("pName").value=""; $("pPrice").value=""; loadProducts();
+  };
+  async function delProduct(id){ if(!confirm("删除这个菜品?"))return; const {error}=await sb.from("products").delete().eq("id",id); if(error){alert(error.message);return;} loadProducts(); }
+  $("addStoreBtn").onclick=async()=>{
+    hide($("storeMsg")); const name=$("storeName").value.trim();
+    if(!name){show($("storeMsg"),"请填店铺名称","err");return;}
     const b=$("addStoreBtn"); b.disabled=true; b.textContent="添加中…";
-    const { data:{user} } = await sb.auth.getUser();
-    const { error } = await sb.from("stores").insert({
-      boss_id:user.id, name,
-      company_name:$("storeCompany").value.trim()||null,
-      address:$("storeAddr").value.trim()||null,
-      vat_number:$("storeVat").value.trim()||null
-    });
+    const {data:{user}}=await sb.auth.getUser();
+    const {error}=await sb.from("stores").insert({boss_id:user.id,name,company_name:$("storeCompany").value.trim()||null,address:$("storeAddr").value.trim()||null,vat_number:$("storeVat").value.trim()||null});
     b.disabled=false; b.textContent="添加店铺";
-    if(error){ show($("storeMsg"),"添加失败:"+error.message,"err"); return; }
-    show($("storeMsg"),"已添加 ✓","ok");
-    $("storeName").value=$("storeCompany").value=$("storeAddr").value=$("storeVat").value="";
-    loadStores();
+    if(error){show($("storeMsg"),"失败:"+error.message,"err");return;}
+    show($("storeMsg"),"已添加 ✓","ok"); $("storeName").value=$("storeCompany").value=$("storeAddr").value=$("storeVat").value=""; loadStores();
   };
 
   render();
