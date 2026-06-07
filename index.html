@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>EasyPOS</title>
+
+<!-- Supabase 客户端 -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- 字体 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#f6f1e9; --card:#fffdf9; --ink:#2a2420; --muted:#8a7f72;
+    --line:#e7ddcf; --accent:#c0532a; --accent-ink:#fff;
+    --ok:#2f7d5b; --err:#b23b2e; --radius:16px;
+    --shadow:0 1px 2px rgba(42,36,32,.04),0 12px 30px -12px rgba(42,36,32,.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:
+      radial-gradient(120% 80% at 100% 0%, #efe6d6 0%, transparent 60%),
+      radial-gradient(120% 90% at 0% 100%, #efe2d2 0%, transparent 55%),
+      var(--bg);
+    color:var(--ink);
+    font-family:"Plus Jakarta Sans",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    display:flex;align-items:center;justify-content:center;
+    padding:24px;min-height:100dvh;
+  }
+  .wrap{width:100%;max-width:440px}
+  .brand{display:flex;align-items:center;gap:11px;justify-content:center;margin-bottom:22px}
+  .logo{width:38px;height:38px;border-radius:11px;background:var(--accent);
+    display:grid;place-items:center;color:#fff;font-family:"Fraunces",serif;font-weight:600;font-size:22px;box-shadow:var(--shadow)}
+  .brand b{font-family:"Fraunces",serif;font-weight:600;font-size:25px;letter-spacing:-.01em}
+  .brand b span{color:var(--accent)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:26px 22px;box-shadow:var(--shadow)}
+  h1{font-family:"Fraunces",serif;font-weight:600;font-size:21px;margin-bottom:4px;letter-spacing:-.01em}
+  .sub{color:var(--muted);font-size:14px;margin-bottom:20px}
+  label{display:block;font-size:13px;font-weight:600;color:var(--ink);margin:14px 0 6px}
+  input{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:11px;
+    font:inherit;font-size:16px;background:#fff;color:var(--ink);outline:none;transition:border-color .15s,box-shadow .15s}
+  input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(192,83,42,.13)}
+  button{font:inherit;cursor:pointer;border:none}
+  .btn{width:100%;margin-top:20px;padding:14px;border-radius:11px;background:var(--accent);
+    color:var(--accent-ink);font-weight:700;font-size:16px;transition:filter .15s,transform .05s}
+  .btn:hover{filter:brightness(1.05)} .btn:active{transform:translateY(1px)}
+  .btn:disabled{opacity:.6;cursor:default}
+  .btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line);font-weight:600;margin-top:0;width:auto;padding:9px 14px;font-size:14px}
+  .msg{margin-top:14px;font-size:14px;padding:10px 12px;border-radius:10px;display:none}
+  .msg.show{display:block}
+  .msg.err{background:#fbe9e6;color:var(--err)}
+  .msg.ok{background:#e8f3ec;color:var(--ok)}
+  .hidden{display:none!important}
+  /* app view */
+  .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:12px}
+  .who{font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .who b{color:var(--ink);font-weight:600}
+  .badge{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--ok);
+    background:#e8f3ec;border:1px solid #cfe6da;border-radius:999px;padding:7px 12px;margin-bottom:18px}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--ok)}
+  .section-t{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 10px}
+  .store{display:flex;align-items:center;gap:11px;padding:13px;border:1px solid var(--line);border-radius:12px;margin-bottom:9px;background:#fff}
+  .store .si{width:34px;height:34px;border-radius:9px;background:#f0e7da;display:grid;place-items:center;font-family:"Fraunces",serif;font-weight:600;color:var(--accent);flex:none}
+  .store .sn{font-weight:600;font-size:15px} .store .sm{font-size:12px;color:var(--muted)}
+  .empty{color:var(--muted);font-size:14px;padding:14px;border:1px dashed var(--line);border-radius:12px;text-align:center}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="brand">
+    <div class="logo">E</div>
+    <b>Easy<span>POS</span></b>
+  </div>
+
+  <!-- ===== 登录视图 ===== -->
+  <div class="card" id="loginView">
+    <h1>登录</h1>
+    <div class="sub">用你在 Supabase 建的账户登录</div>
+    <label>邮箱</label>
+    <input id="email" type="email" autocomplete="username" placeholder="you@example.com" />
+    <label>密码</label>
+    <input id="password" type="password" autocomplete="current-password" placeholder="••••••••" />
+    <button class="btn" id="loginBtn">登录</button>
+    <div class="msg err" id="loginMsg"></div>
+  </div>
+
+  <!-- ===== 登录后视图 ===== -->
+  <div class="card hidden" id="appView">
+    <div class="top">
+      <div class="who">登录账户:<b id="userEmail">—</b></div>
+      <button class="btn ghost" id="logoutBtn">退出</button>
+    </div>
+    <div class="badge"><span class="dot"></span> <span id="acctStatus">正在验证账户…</span></div>
+
+    <div class="section-t">我的店铺</div>
+    <div id="storeList"></div>
+
+    <div class="section-t">添加一个店铺</div>
+    <label>店铺名称</label>
+    <input id="storeName" placeholder="例如:Fluffy Brunch" />
+    <div class="row2">
+      <div><label>地址(可选)</label><input id="storeAddr" placeholder="Venezia…" /></div>
+      <div><label>P.IVA(可选)</label><input id="storeVat" placeholder="IT…" /></div>
+    </div>
+    <button class="btn" id="addStoreBtn">添加店铺</button>
+    <div class="msg" id="storeMsg"></div>
+  </div>
+
+</div>
+
+<script>
+  // ============================================================
+  // ① 在这里填你自己的两个值(在 Supabase: Project Settings → API)
+  //    - Project URL          → 填到 SUPABASE_URL
+  //    - Project API keys 的 "anon public" → 填到 SUPABASE_ANON_KEY
+  //  ⚠️ anon 是公开钥匙,放这里没问题。
+  //  ⚠️ 千万别把 service_role 密钥填到这里!
+  // ============================================================
+  const SUPABASE_URL = "PASTE_YOUR_PROJECT_URL_HERE";
+  const SUPABASE_ANON_KEY = "PASTE_YOUR_ANON_PUBLIC_KEY_HERE";
+
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const $ = (id) => document.getElementById(id);
+  const show = (el, text, kind) => { el.textContent = text; el.className = "msg show " + (kind||""); };
+  const hide = (el) => { el.className = "msg"; };
+
+  // ---- 视图切换:根据登录状态显示登录页或后台 ----
+  async function render() {
+    const { data:{ session } } = await sb.auth.getSession();
+    if (session) {
+      $("loginView").classList.add("hidden");
+      $("appView").classList.remove("hidden");
+      $("userEmail").textContent = session.user.email;
+      await verifyAccount();
+      await loadStores();
+    } else {
+      $("appView").classList.add("hidden");
+      $("loginView").classList.remove("hidden");
+    }
+  }
+
+  // ---- 登录 ----
+  $("loginBtn").onclick = async () => {
+    hide($("loginMsg"));
+    const btn = $("loginBtn"); btn.disabled = true; btn.textContent = "登录中…";
+    const { error } = await sb.auth.signInWithPassword({
+      email: $("email").value.trim(),
+      password: $("password").value
+    });
+    btn.disabled = false; btn.textContent = "登录";
+    if (error) { show($("loginMsg"), "登录失败:" + error.message, "err"); return; }
+    render();
+  };
+
+  // ---- 退出 ----
+  $("logoutBtn").onclick = async () => { await sb.auth.signOut(); render(); };
+
+  // ---- 验证账户:读自己的 bosses 行(测试 RLS 读) ----
+  async function verifyAccount() {
+    const { data, error } = await sb.from("bosses").select("id,email").limit(1);
+    if (error) { $("acctStatus").textContent = "账户读取出错:" + error.message; return; }
+    if (data && data.length) $("acctStatus").textContent = "账户已验证 · 权限正常";
+    else $("acctStatus").textContent = "已登录,但没读到账户记录(检查触发器)";
+  }
+
+  // ---- 读店铺列表(测试 RLS 读) ----
+  async function loadStores() {
+    const { data, error } = await sb.from("stores").select("*").order("created_at",{ascending:true});
+    const list = $("storeList");
+    if (error) { list.innerHTML = '<div class="empty">读取出错:'+error.message+'</div>'; return; }
+    if (!data || !data.length) { list.innerHTML = '<div class="empty">还没有店铺,在下面添加一个 →</div>'; return; }
+    list.innerHTML = data.map(s => `
+      <div class="store">
+        <div class="si">${(s.name||"?").trim().charAt(0).toUpperCase()}</div>
+        <div><div class="sn">${esc(s.name)}</div>
+        <div class="sm">${esc(s.address||"")}${s.vat_number? " · "+esc(s.vat_number):""}</div></div>
+      </div>`).join("");
+  }
+
+  // ---- 添加店铺(测试 RLS 写:只能写自己账户的) ----
+  $("addStoreBtn").onclick = async () => {
+    hide($("storeMsg"));
+    const name = $("storeName").value.trim();
+    if (!name) { show($("storeMsg"), "请填店铺名称", "err"); return; }
+    const btn = $("addStoreBtn"); btn.disabled = true; btn.textContent = "添加中…";
+    const { data:{ user } } = await sb.auth.getUser();
+    const { error } = await sb.from("stores").insert({
+      boss_id: user.id,                 // 权限规则会确保只能是你自己,改不了别人的
+      name,
+      address: $("storeAddr").value.trim() || null,
+      vat_number: $("storeVat").value.trim() || null
+    });
+    btn.disabled = false; btn.textContent = "添加店铺";
+    if (error) { show($("storeMsg"), "添加失败:" + error.message, "err"); return; }
+    show($("storeMsg"), "已添加 ✓", "ok");
+    $("storeName").value = $("storeAddr").value = $("storeVat").value = "";
+    loadStores();
+  };
+
+  function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+  render();
+</script>
+</body>
+</html>
