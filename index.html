@@ -3,86 +3,89 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>EasyPOS</title>
+<meta name="theme-color" content="#000000" />
+<title>€asyPOS</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg" />
 
-<!-- Supabase 客户端 -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
 
-<!-- 字体 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
 
 <style>
   :root{
-    --bg:#f6f1e9; --card:#fffdf9; --ink:#2a2420; --muted:#8a7f72;
-    --line:#e7ddcf; --accent:#c0532a; --accent-ink:#fff;
-    --ok:#2f7d5b; --err:#b23b2e; --radius:16px;
-    --shadow:0 1px 2px rgba(42,36,32,.04),0 12px 30px -12px rgba(42,36,32,.18);
+    --bg:#000000; --bg2:#1c1c1e; --bg3:#2c2c2e;
+    --ink:#ffffff; --muted:#8d8d93; --line:#38383a;
+    --accent:#0a84ff; --ok:#30d158; --err:#ff453a;
+    --r:14px;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}
-  body{
-    background:
-      radial-gradient(120% 80% at 100% 0%, #efe6d6 0%, transparent 60%),
-      radial-gradient(120% 90% at 0% 100%, #efe2d2 0%, transparent 55%),
-      var(--bg);
-    color:var(--ink);
-    font-family:"Plus Jakarta Sans",system-ui,sans-serif;
+  body{background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
     -webkit-font-smoothing:antialiased;
-    display:flex;align-items:center;justify-content:center;
-    padding:24px;min-height:100dvh;
-  }
-  .wrap{width:100%;max-width:440px}
-  .brand{display:flex;align-items:center;gap:11px;justify-content:center;margin-bottom:22px}
-  .logo{width:38px;height:38px;border-radius:11px;background:var(--accent);
-    display:grid;place-items:center;color:#fff;font-family:"Fraunces",serif;font-weight:600;font-size:22px;box-shadow:var(--shadow)}
-  .brand b{font-family:"Fraunces",serif;font-weight:600;font-size:25px;letter-spacing:-.01em}
-  .brand b span{color:var(--accent)}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-    padding:26px 22px;box-shadow:var(--shadow)}
-  h1{font-family:"Fraunces",serif;font-weight:600;font-size:21px;margin-bottom:4px;letter-spacing:-.01em}
-  .sub{color:var(--muted);font-size:14px;margin-bottom:20px}
-  label{display:block;font-size:13px;font-weight:600;color:var(--ink);margin:14px 0 6px}
-  input{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:11px;
-    font:inherit;font-size:16px;background:#fff;color:var(--ink);outline:none;transition:border-color .15s,box-shadow .15s}
-  input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(192,83,42,.13)}
+    display:flex;align-items:flex-start;justify-content:center;
+    padding:max(28px,env(safe-area-inset-top)) 18px 28px;min-height:100dvh;}
+  .wrap{width:100%;max-width:460px;margin-top:5vh}
+
+  .brand{margin-bottom:26px;text-align:center}
+  .logo-note{width:210px;max-width:66%;height:auto;color:#fff;display:inline-block}
+  .wmtext{font-family:'Quicksand',sans-serif}
+
+  .card{background:var(--bg2);border-radius:var(--r);padding:22px 18px;margin-bottom:16px}
+  h1{font-weight:700;font-size:22px;margin-bottom:4px;letter-spacing:-.01em}
+  .sub{color:var(--muted);font-size:14px;margin-bottom:18px}
+  label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:14px 0 6px}
+  input{width:100%;padding:13px 14px;border:none;border-radius:10px;font:inherit;font-size:16px;
+    background:var(--bg3);color:var(--ink);outline:none;transition:box-shadow .15s}
+  input::placeholder{color:#6b6b70}
+  input:focus{box-shadow:0 0 0 3px rgba(10,132,255,.35)}
   button{font:inherit;cursor:pointer;border:none}
   .btn{width:100%;margin-top:20px;padding:14px;border-radius:11px;background:var(--accent);
-    color:var(--accent-ink);font-weight:700;font-size:16px;transition:filter .15s,transform .05s}
-  .btn:hover{filter:brightness(1.05)} .btn:active{transform:translateY(1px)}
-  .btn:disabled{opacity:.6;cursor:default}
-  .btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line);font-weight:600;margin-top:0;width:auto;padding:9px 14px;font-size:14px}
-  .msg{margin-top:14px;font-size:14px;padding:10px 12px;border-radius:10px;display:none}
+    color:#fff;font-weight:600;font-size:17px;transition:opacity .12s,transform .05s}
+  .btn:active{transform:translateY(1px);opacity:.85}
+  .btn:disabled{opacity:.5;cursor:default}
+  .btn.ghost{background:var(--bg3);color:var(--accent);font-weight:600;width:auto;margin-top:0;padding:9px 15px;font-size:15px;border-radius:9px}
+  .msg{margin-top:14px;font-size:14px;padding:11px 13px;border-radius:10px;display:none}
   .msg.show{display:block}
-  .msg.err{background:#fbe9e6;color:var(--err)}
-  .msg.ok{background:#e8f3ec;color:var(--ok)}
+  .msg.err{background:rgba(255,69,58,.16);color:var(--err)}
+  .msg.ok{background:rgba(48,209,88,.16);color:var(--ok)}
   .hidden{display:none!important}
-  /* app view */
-  .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:12px}
+  .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px}
   .who{font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .who b{color:var(--ink);font-weight:600}
-  .badge{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--ok);
-    background:#e8f3ec;border:1px solid #cfe6da;border-radius:999px;padding:7px 12px;margin-bottom:18px}
+  .badge{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--ok);
+    background:rgba(48,209,88,.14);border-radius:999px;padding:8px 13px}
   .dot{width:7px;height:7px;border-radius:50%;background:var(--ok)}
-  .section-t{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 10px}
-  .store{display:flex;align-items:center;gap:11px;padding:13px;border:1px solid var(--line);border-radius:12px;margin-bottom:9px;background:#fff}
-  .store .si{width:34px;height:34px;border-radius:9px;background:#f0e7da;display:grid;place-items:center;font-family:"Fraunces",serif;font-weight:600;color:var(--accent);flex:none}
-  .store .sn{font-weight:600;font-size:15px} .store .sm{font-size:12px;color:var(--muted)}
-  .empty{color:var(--muted);font-size:14px;padding:14px;border:1px dashed var(--line);border-radius:12px;text-align:center}
+  .section-t{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:6px 0 10px;padding:0 2px}
+  .store{display:flex;align-items:center;gap:12px;padding:13px;border-radius:11px;margin-bottom:9px;background:var(--bg3)}
+  .store .si{width:36px;height:36px;border-radius:9px;background:var(--accent);display:grid;place-items:center;font-weight:700;color:#fff;flex:none}
+  .store .sn{font-weight:600;font-size:16px}
+  .store .sm{font-size:13px;color:var(--muted);margin-top:1px}
+  .empty{color:var(--muted);font-size:14px;padding:16px;border:1px dashed var(--line);border-radius:11px;text-align:center}
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .cfgwarn{background:rgba(255,69,58,.16);color:var(--err);padding:14px;border-radius:11px;font-size:14px;line-height:1.5}
 </style>
 </head>
 <body>
 <div class="wrap">
 
   <div class="brand">
-    <div class="logo">E</div>
-    <b>Easy<span>POS</span></b>
+    <svg class="logo-note" viewBox="0 0 200 100" role="img" aria-label="easypos">
+      <rect x="6" y="14" width="188" height="72" rx="11" fill="none" stroke="currentColor" stroke-width="2.6"/>
+      <rect x="13" y="22" width="174" height="56" rx="6" fill="none" stroke="currentColor" stroke-width="1"/>
+      <text class="wmtext" x="100" y="57" text-anchor="middle" font-size="22" font-weight="600" fill="currentColor">€asyPOS</text>
+      <text class="wmtext" x="176" y="73" text-anchor="end" font-size="8.5" font-weight="500" fill="currentColor" letter-spacing="1">2026</text>
+    </svg>
   </div>
 
-  <!-- ===== 登录视图 ===== -->
-  <div class="card" id="loginView">
+  <div class="card hidden" id="cfgView">
+    <div class="cfgwarn">还没读到 Supabase 配置。请确认 <b>config.js</b> 和 index.html 在同一个文件夹,并且里面填了你的 Project URL 和 anon 钥匙。</div>
+  </div>
+
+  <div class="card hidden" id="loginView">
     <h1>登录</h1>
     <div class="sub">用你在 Supabase 建的账户登录</div>
     <label>邮箱</label>
@@ -93,7 +96,6 @@
     <div class="msg err" id="loginMsg"></div>
   </div>
 
-  <!-- ===== 登录后视图 ===== -->
   <div class="card hidden" id="appView">
     <div class="top">
       <div class="who">登录账户:<b id="userEmail">—</b></div>
@@ -101,12 +103,14 @@
     </div>
     <div class="badge"><span class="dot"></span> <span id="acctStatus">正在验证账户…</span></div>
 
-    <div class="section-t">我的店铺</div>
+    <div class="section-t" style="margin-top:18px">我的店铺</div>
     <div id="storeList"></div>
 
-    <div class="section-t">添加一个店铺</div>
-    <label>店铺名称</label>
+    <div class="section-t" style="margin-top:18px">添加一个店铺</div>
+    <label>店铺名称(对外显示名)</label>
     <input id="storeName" placeholder="例如:Fluffy Brunch" />
+    <label>公司名称(开票法定名 / Ragione sociale)</label>
+    <input id="storeCompany" placeholder="例如:Fluffy Brunch S.r.l." />
     <div class="row2">
       <div><label>地址(可选)</label><input id="storeAddr" placeholder="Venezia…" /></div>
       <div><label>P.IVA(可选)</label><input id="storeVat" placeholder="IT…" /></div>
@@ -118,23 +122,18 @@
 </div>
 
 <script>
-  // ============================================================
-  // ① 在这里填你自己的两个值(在 Supabase: Project Settings → API)
-  //    - Project URL          → 填到 SUPABASE_URL
-  //    - Project API keys 的 "anon public" → 填到 SUPABASE_ANON_KEY
-  //  ⚠️ anon 是公开钥匙,放这里没问题。
-  //  ⚠️ 千万别把 service_role 密钥填到这里!
-  // ============================================================
-  const SUPABASE_URL = "https://wtziohmnfdajxubkknfe.supabase.co";
-  const SUPABASE_ANON_KEY = "sb_publishable_6Ha9OyyfHL_qfb-pCxDI5A_pPMVPUOs";
-
-  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
   const $ = (id) => document.getElementById(id);
-  const show = (el, text, kind) => { el.textContent = text; el.className = "msg show " + (kind||""); };
+  const show = (el, t, k) => { el.textContent = t; el.className = "msg show " + (k||""); };
   const hide = (el) => { el.className = "msg"; };
 
-  // ---- 视图切换:根据登录状态显示登录页或后台 ----
+  if (!window.SUPA_URL || !window.SUPA_KEY ||
+      window.SUPA_URL.includes("你的") || window.SUPA_KEY.includes("你的")) {
+    $("cfgView").classList.remove("hidden");
+    throw new Error("config missing");
+  }
+
+  const sb = supabase.createClient(window.SUPA_URL, window.SUPA_KEY);
+
   async function render() {
     const { data:{ session } } = await sb.auth.getSession();
     if (session) {
@@ -149,45 +148,39 @@
     }
   }
 
-  // ---- 登录 ----
   $("loginBtn").onclick = async () => {
     hide($("loginMsg"));
     const btn = $("loginBtn"); btn.disabled = true; btn.textContent = "登录中…";
     const { error } = await sb.auth.signInWithPassword({
-      email: $("email").value.trim(),
-      password: $("password").value
+      email: $("email").value.trim(), password: $("password").value
     });
     btn.disabled = false; btn.textContent = "登录";
     if (error) { show($("loginMsg"), "登录失败:" + error.message, "err"); return; }
     render();
   };
 
-  // ---- 退出 ----
   $("logoutBtn").onclick = async () => { await sb.auth.signOut(); render(); };
 
-  // ---- 验证账户:读自己的 bosses 行(测试 RLS 读) ----
   async function verifyAccount() {
     const { data, error } = await sb.from("bosses").select("id,email").limit(1);
     if (error) { $("acctStatus").textContent = "账户读取出错:" + error.message; return; }
-    if (data && data.length) $("acctStatus").textContent = "账户已验证 · 权限正常";
-    else $("acctStatus").textContent = "已登录,但没读到账户记录(检查触发器)";
+    $("acctStatus").textContent = (data && data.length) ? "账户已验证 · 权限正常" : "已登录,但没读到账户记录";
   }
 
-  // ---- 读店铺列表(测试 RLS 读) ----
   async function loadStores() {
     const { data, error } = await sb.from("stores").select("*").order("created_at",{ascending:true});
     const list = $("storeList");
-    if (error) { list.innerHTML = '<div class="empty">读取出错:'+error.message+'</div>'; return; }
+    if (error) { list.innerHTML = '<div class="empty">读取出错:'+esc(error.message)+'</div>'; return; }
     if (!data || !data.length) { list.innerHTML = '<div class="empty">还没有店铺,在下面添加一个 →</div>'; return; }
-    list.innerHTML = data.map(s => `
-      <div class="store">
+    list.innerHTML = data.map(s => {
+      const sub = [s.company_name, s.address, s.vat_number].filter(Boolean).map(esc).join(" · ");
+      return `<div class="store">
         <div class="si">${(s.name||"?").trim().charAt(0).toUpperCase()}</div>
-        <div><div class="sn">${esc(s.name)}</div>
-        <div class="sm">${esc(s.address||"")}${s.vat_number? " · "+esc(s.vat_number):""}</div></div>
-      </div>`).join("");
+        <div><div class="sn">${esc(s.name)}</div>${sub?`<div class="sm">${sub}</div>`:""}</div>
+      </div>`;
+    }).join("");
   }
 
-  // ---- 添加店铺(测试 RLS 写:只能写自己账户的) ----
   $("addStoreBtn").onclick = async () => {
     hide($("storeMsg"));
     const name = $("storeName").value.trim();
@@ -195,15 +188,15 @@
     const btn = $("addStoreBtn"); btn.disabled = true; btn.textContent = "添加中…";
     const { data:{ user } } = await sb.auth.getUser();
     const { error } = await sb.from("stores").insert({
-      boss_id: user.id,                 // 权限规则会确保只能是你自己,改不了别人的
-      name,
+      boss_id: user.id, name,
+      company_name: $("storeCompany").value.trim() || null,
       address: $("storeAddr").value.trim() || null,
       vat_number: $("storeVat").value.trim() || null
     });
     btn.disabled = false; btn.textContent = "添加店铺";
     if (error) { show($("storeMsg"), "添加失败:" + error.message, "err"); return; }
     show($("storeMsg"), "已添加 ✓", "ok");
-    $("storeName").value = $("storeAddr").value = $("storeVat").value = "";
+    $("storeName").value = $("storeCompany").value = $("storeAddr").value = $("storeVat").value = "";
     loadStores();
   };
 
