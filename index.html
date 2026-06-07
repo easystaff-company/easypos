@@ -18,8 +18,7 @@
   :root{
     --bg:#000000; --bg2:#1c1c1e; --bg3:#2c2c2e;
     --ink:#ffffff; --muted:#8d8d93; --line:#38383a;
-    --accent:#0a84ff; --ok:#30d158; --err:#ff453a;
-    --r:14px;
+    --accent:#0a84ff; --ok:#30d158; --err:#ff453a; --r:14px;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}
@@ -27,45 +26,51 @@
     font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
     -webkit-font-smoothing:antialiased;
     display:flex;align-items:flex-start;justify-content:center;
-    padding:max(28px,env(safe-area-inset-top)) 18px 28px;min-height:100dvh;}
-  .wrap{width:100%;max-width:460px;margin-top:5vh}
-
-  .brand{margin-bottom:26px;text-align:center}
-  .logo-note{width:210px;max-width:66%;height:auto;color:#fff;display:inline-block}
+    padding:max(28px,env(safe-area-inset-top)) 18px 40px;min-height:100dvh;}
+  .wrap{width:100%;max-width:460px;margin-top:4vh}
+  .brand{margin-bottom:22px;text-align:center}
+  .logo-note{width:200px;max-width:62%;height:auto;color:#fff;display:inline-block}
   .wmtext{font-family:'Quicksand',sans-serif}
-
   .card{background:var(--bg2);border-radius:var(--r);padding:22px 18px;margin-bottom:16px}
   h1{font-weight:700;font-size:22px;margin-bottom:4px;letter-spacing:-.01em}
   .sub{color:var(--muted);font-size:14px;margin-bottom:18px}
   label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:14px 0 6px}
-  input{width:100%;padding:13px 14px;border:none;border-radius:10px;font:inherit;font-size:16px;
-    background:var(--bg3);color:var(--ink);outline:none;transition:box-shadow .15s}
+  input,select{width:100%;padding:13px 14px;border:none;border-radius:10px;font:inherit;font-size:16px;
+    background:var(--bg3);color:var(--ink);outline:none;transition:box-shadow .15s;-webkit-appearance:none;appearance:none}
   input::placeholder{color:#6b6b70}
-  input:focus{box-shadow:0 0 0 3px rgba(10,132,255,.35)}
+  input:focus,select:focus{box-shadow:0 0 0 3px rgba(10,132,255,.35)}
+  select{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%238d8d93' stroke-width='2' fill='none' stroke-linecap='round'/></svg>");
+    background-repeat:no-repeat;background-position:right 14px center;padding-right:34px}
   button{font:inherit;cursor:pointer;border:none}
-  .btn{width:100%;margin-top:20px;padding:14px;border-radius:11px;background:var(--accent);
-    color:#fff;font-weight:600;font-size:17px;transition:opacity .12s,transform .05s}
+  .btn{width:100%;margin-top:18px;padding:14px;border-radius:11px;background:var(--accent);color:#fff;font-weight:600;font-size:17px;transition:opacity .12s,transform .05s}
   .btn:active{transform:translateY(1px);opacity:.85}
-  .btn:disabled{opacity:.5;cursor:default}
-  .btn.ghost{background:var(--bg3);color:var(--accent);font-weight:600;width:auto;margin-top:0;padding:9px 15px;font-size:15px;border-radius:9px}
+  .btn:disabled{opacity:.5}
+  .btn.ghost{background:var(--bg3);color:var(--accent);width:auto;margin-top:0;padding:9px 15px;font-size:15px;border-radius:9px}
+  .btn.sm{width:auto;margin-top:0;padding:13px 16px;font-size:15px;border-radius:10px;flex:none}
   .msg{margin-top:14px;font-size:14px;padding:11px 13px;border-radius:10px;display:none}
   .msg.show{display:block}
   .msg.err{background:rgba(255,69,58,.16);color:var(--err)}
   .msg.ok{background:rgba(48,209,88,.16);color:var(--ok)}
   .hidden{display:none!important}
-  .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px}
+  .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:12px}
   .who{font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .who b{color:var(--ink);font-weight:600}
-  .badge{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--ok);
-    background:rgba(48,209,88,.14);border-radius:999px;padding:8px 13px}
-  .dot{width:7px;height:7px;border-radius:50%;background:var(--ok)}
-  .section-t{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:6px 0 10px;padding:0 2px}
-  .store{display:flex;align-items:center;gap:12px;padding:13px;border-radius:11px;margin-bottom:9px;background:var(--bg3)}
-  .store .si{width:36px;height:36px;border-radius:9px;background:var(--accent);display:grid;place-items:center;font-weight:700;color:#fff;flex:none}
-  .store .sn{font-weight:600;font-size:16px}
-  .store .sm{font-size:13px;color:var(--muted);margin-top:1px}
-  .empty{color:var(--muted);font-size:14px;padding:16px;border:1px dashed var(--line);border-radius:11px;text-align:center}
+  .section-t{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:6px 0 10px;padding:0 2px}
+  .row-add{display:flex;gap:8px;align-items:stretch}
+  .row-add input{flex:1}
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{background:var(--bg3);border-radius:999px;padding:7px 13px;font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:8px}
+  .chip .x{color:var(--muted);font-weight:700;cursor:pointer}
+  .item{display:flex;align-items:center;gap:12px;padding:12px 13px;border-radius:11px;margin-bottom:8px;background:var(--bg3)}
+  .item .nm{font-weight:600;font-size:16px}
+  .item .meta{font-size:13px;color:var(--muted);margin-top:1px}
+  .item .pr{margin-left:auto;font-weight:700;font-size:16px;white-space:nowrap}
+  .item .x{color:var(--muted);font-weight:700;cursor:pointer;padding-left:6px}
+  .empty{color:var(--muted);font-size:14px;padding:14px;border:1px dashed var(--line);border-radius:11px;text-align:center}
+  details{margin-top:8px;border-top:1px solid var(--line);padding-top:8px}
+  summary{color:var(--accent);font-size:14px;font-weight:600;cursor:pointer;padding:8px 0;list-style:none}
+  summary::-webkit-details-marker{display:none}
   .cfgwarn{background:rgba(255,69,58,.16);color:var(--err);padding:14px;border-radius:11px;font-size:14px;line-height:1.5}
 </style>
 </head>
@@ -82,7 +87,7 @@
   </div>
 
   <div class="card hidden" id="cfgView">
-    <div class="cfgwarn">还没读到 Supabase 配置。请确认 <b>config.js</b> 和 index.html 在同一个文件夹,并且里面填了你的 Project URL 和 anon 钥匙。</div>
+    <div class="cfgwarn">还没读到 Supabase 配置。请确认 <b>config.js</b> 和 index.html 在同一文件夹,并填了 Project URL 和 anon 钥匙。</div>
   </div>
 
   <div class="card hidden" id="loginView">
@@ -98,49 +103,70 @@
 
   <div class="card hidden" id="appView">
     <div class="top">
-      <div class="who">登录账户:<b id="userEmail">—</b></div>
+      <div class="who">账户:<b id="userEmail">—</b></div>
       <button class="btn ghost" id="logoutBtn">退出</button>
     </div>
-    <div class="badge"><span class="dot"></span> <span id="acctStatus">正在验证账户…</span></div>
+    <label>当前店铺</label>
+    <select id="storeSel"></select>
 
-    <div class="section-t" style="margin-top:18px">我的店铺</div>
-    <div id="storeList"></div>
-
-    <div class="section-t" style="margin-top:18px">添加一个店铺</div>
-    <label>店铺名称(对外显示名)</label>
-    <input id="storeName" placeholder="例如:Fluffy Brunch" />
-    <label>公司名称(开票法定名 / Ragione sociale)</label>
-    <input id="storeCompany" placeholder="例如:Fluffy Brunch S.r.l." />
-    <div class="row2">
-      <div><label>地址(可选)</label><input id="storeAddr" placeholder="Venezia…" /></div>
-      <div><label>P.IVA(可选)</label><input id="storeVat" placeholder="IT…" /></div>
+    <div class="section-t" style="margin-top:20px">分类</div>
+    <div class="row-add">
+      <input id="catName" placeholder="如:咖啡 / 早午餐 / 甜点" />
+      <button class="btn sm" id="addCatBtn">添加</button>
     </div>
-    <button class="btn" id="addStoreBtn">添加店铺</button>
-    <div class="msg" id="storeMsg"></div>
+    <div class="chips" id="catList" style="margin-top:12px"></div>
+
+    <div class="section-t" style="margin-top:22px">菜品</div>
+    <label>名称</label>
+    <input id="pName" placeholder="如:Cappuccino" />
+    <div class="row2">
+      <div><label>价格 €</label><input id="pPrice" type="number" inputmode="decimal" step="0.01" placeholder="0.00" /></div>
+      <div><label>单位</label><select id="pUnit"><option value="piece">计件</option><option value="weight">称重</option></select></div>
+    </div>
+    <label>分类</label>
+    <select id="pCat"></select>
+    <button class="btn" id="addProdBtn">添加菜品</button>
+    <div class="msg" id="menuMsg"></div>
+    <div id="prodList" style="margin-top:14px"></div>
+
+    <details>
+      <summary>店铺设置 / 添加店铺</summary>
+      <label>店铺名称(显示名)</label>
+      <input id="storeName" placeholder="例如:Fluffy Brunch" />
+      <label>公司名称(开票法定名 / Ragione sociale)</label>
+      <input id="storeCompany" placeholder="例如:Fluffy Brunch S.r.l." />
+      <div class="row2">
+        <div><label>地址(可选)</label><input id="storeAddr" placeholder="Venezia…" /></div>
+        <div><label>P.IVA(可选)</label><input id="storeVat" placeholder="IT…" /></div>
+      </div>
+      <button class="btn" id="addStoreBtn">添加店铺</button>
+      <div class="msg" id="storeMsg"></div>
+    </details>
   </div>
 
 </div>
 
 <script>
   const $ = (id) => document.getElementById(id);
-  const show = (el, t, k) => { el.textContent = t; el.className = "msg show " + (k||""); };
-  const hide = (el) => { el.className = "msg"; };
+  const show = (el,t,k)=>{el.textContent=t;el.className="msg show "+(k||"");};
+  const hide = (el)=>{el.className="msg";};
+  const money = (n)=> "€"+Number(n||0).toFixed(2);
+  const unitLabel = (u)=> u==="weight" ? "称重" : "计件";
+  function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 
-  if (!window.SUPA_URL || !window.SUPA_KEY ||
-      window.SUPA_URL.includes("你的") || window.SUPA_KEY.includes("你的")) {
-    $("cfgView").classList.remove("hidden");
-    throw new Error("config missing");
+  if(!window.SUPA_URL||!window.SUPA_KEY||window.SUPA_URL.includes("你的")||window.SUPA_KEY.includes("你的")){
+    $("cfgView").classList.remove("hidden"); throw new Error("config missing");
   }
-
   const sb = supabase.createClient(window.SUPA_URL, window.SUPA_KEY);
+  let stores = [], categories = [];
+  const storeId = ()=> $("storeSel").value || null;
 
-  async function render() {
-    const { data:{ session } } = await sb.auth.getSession();
-    if (session) {
+  async function render(){
+    const { data:{session} } = await sb.auth.getSession();
+    if(session){
       $("loginView").classList.add("hidden");
       $("appView").classList.remove("hidden");
       $("userEmail").textContent = session.user.email;
-      await verifyAccount();
       await loadStores();
     } else {
       $("appView").classList.add("hidden");
@@ -148,59 +174,127 @@
     }
   }
 
-  $("loginBtn").onclick = async () => {
+  $("loginBtn").onclick = async ()=>{
     hide($("loginMsg"));
-    const btn = $("loginBtn"); btn.disabled = true; btn.textContent = "登录中…";
-    const { error } = await sb.auth.signInWithPassword({
-      email: $("email").value.trim(), password: $("password").value
-    });
-    btn.disabled = false; btn.textContent = "登录";
-    if (error) { show($("loginMsg"), "登录失败:" + error.message, "err"); return; }
+    const b=$("loginBtn"); b.disabled=true; b.textContent="登录中…";
+    const { error } = await sb.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});
+    b.disabled=false; b.textContent="登录";
+    if(error){ show($("loginMsg"),"登录失败:"+error.message,"err"); return; }
     render();
   };
+  $("logoutBtn").onclick = async ()=>{ await sb.auth.signOut(); render(); };
 
-  $("logoutBtn").onclick = async () => { await sb.auth.signOut(); render(); };
+  async function loadStores(){
+    const { data, error } = await sb.from("stores").select("*").order("created_at",{ascending:true});
+    if(error){ return; }
+    stores = data||[];
+    const sel=$("storeSel");
+    if(!stores.length){
+      sel.innerHTML='<option value="">（请先在下方添加店铺）</option>';
+      $("catList").innerHTML=""; $("prodList").innerHTML="";
+      return;
+    }
+    sel.innerHTML = stores.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("");
+    await loadMenu();
+  }
+  $("storeSel").onchange = loadMenu;
 
-  async function verifyAccount() {
-    const { data, error } = await sb.from("bosses").select("id,email").limit(1);
-    if (error) { $("acctStatus").textContent = "账户读取出错:" + error.message; return; }
-    $("acctStatus").textContent = (data && data.length) ? "账户已验证 · 权限正常" : "已登录,但没读到账户记录";
+  async function loadMenu(){ await loadCategories(); await loadProducts(); }
+
+  async function loadCategories(){
+    const sid=storeId(); if(!sid){return;}
+    const { data, error } = await sb.from("categories").select("*").eq("store_id",sid).order("sort_order").order("created_at");
+    categories = error?[]:(data||[]);
+    // 分类标签
+    $("catList").innerHTML = categories.length
+      ? categories.map(c=>`<span class="chip">${esc(c.name)} <span class="x" data-cat="${c.id}">✕</span></span>`).join("")
+      : '<div class="empty" style="width:100%">还没有分类,先加一个</div>';
+    // 菜品表单的分类下拉
+    $("pCat").innerHTML = '<option value="">（无分类）</option>' + categories.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join("");
+    document.querySelectorAll('#catList .x').forEach(x=> x.onclick = ()=> delCategory(x.dataset.cat));
   }
 
-  async function loadStores() {
-    const { data, error } = await sb.from("stores").select("*").order("created_at",{ascending:true});
-    const list = $("storeList");
-    if (error) { list.innerHTML = '<div class="empty">读取出错:'+esc(error.message)+'</div>'; return; }
-    if (!data || !data.length) { list.innerHTML = '<div class="empty">还没有店铺,在下面添加一个 →</div>'; return; }
-    list.innerHTML = data.map(s => {
-      const sub = [s.company_name, s.address, s.vat_number].filter(Boolean).map(esc).join(" · ");
-      return `<div class="store">
-        <div class="si">${(s.name||"?").trim().charAt(0).toUpperCase()}</div>
-        <div><div class="sn">${esc(s.name)}</div>${sub?`<div class="sm">${sub}</div>`:""}</div>
+  async function loadProducts(){
+    const sid=storeId(); if(!sid){return;}
+    const { data, error } = await sb.from("products").select("*, categories(name)").eq("store_id",sid).order("created_at");
+    const list=$("prodList");
+    if(error){ list.innerHTML='<div class="empty">读取出错:'+esc(error.message)+'</div>'; return; }
+    if(!data||!data.length){ list.innerHTML='<div class="empty">还没有菜品</div>'; return; }
+    list.innerHTML = data.map(p=>{
+      const meta=[p.categories?.name, unitLabel(p.unit)].filter(Boolean).map(esc).join(" · ");
+      return `<div class="item">
+        <div><div class="nm">${esc(p.name)}</div><div class="meta">${meta}</div></div>
+        <div class="pr">${money(p.price)}</div>
+        <span class="x" data-prod="${p.id}">✕</span>
       </div>`;
     }).join("");
+    document.querySelectorAll('#prodList .x').forEach(x=> x.onclick = ()=> delProduct(x.dataset.prod));
   }
 
-  $("addStoreBtn").onclick = async () => {
-    hide($("storeMsg"));
-    const name = $("storeName").value.trim();
-    if (!name) { show($("storeMsg"), "请填店铺名称", "err"); return; }
-    const btn = $("addStoreBtn"); btn.disabled = true; btn.textContent = "添加中…";
-    const { data:{ user } } = await sb.auth.getUser();
-    const { error } = await sb.from("stores").insert({
-      boss_id: user.id, name,
-      company_name: $("storeCompany").value.trim() || null,
-      address: $("storeAddr").value.trim() || null,
-      vat_number: $("storeVat").value.trim() || null
-    });
-    btn.disabled = false; btn.textContent = "添加店铺";
-    if (error) { show($("storeMsg"), "添加失败:" + error.message, "err"); return; }
-    show($("storeMsg"), "已添加 ✓", "ok");
-    $("storeName").value = $("storeCompany").value = $("storeAddr").value = $("storeVat").value = "";
-    loadStores();
+  $("addCatBtn").onclick = async ()=>{
+    const sid=storeId(); const name=$("catName").value.trim();
+    if(!sid){ alert("请先添加并选择一个店铺"); return; }
+    if(!name) return;
+    const b=$("addCatBtn"); b.disabled=true;
+    const { error } = await sb.from("categories").insert({store_id:sid,name});
+    b.disabled=false;
+    if(error){ alert("添加分类失败:"+error.message); return; }
+    $("catName").value=""; loadCategories();
   };
 
-  function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+  async function delCategory(id){
+    if(!confirm("删除这个分类?(分类下的菜品不会删,只是变成无分类)")) return;
+    const { error } = await sb.from("categories").delete().eq("id",id);
+    if(error){ alert("删除失败:"+error.message); return; }
+    loadMenu();
+  }
+
+  $("addProdBtn").onclick = async ()=>{
+    hide($("menuMsg"));
+    const sid=storeId();
+    if(!sid){ show($("menuMsg"),"请先添加并选择一个店铺","err"); return; }
+    const name=$("pName").value.trim();
+    const price=parseFloat($("pPrice").value);
+    if(!name){ show($("menuMsg"),"请填菜品名称","err"); return; }
+    if(isNaN(price)){ show($("menuMsg"),"请填价格","err"); return; }
+    const b=$("addProdBtn"); b.disabled=true; b.textContent="添加中…";
+    const { error } = await sb.from("products").insert({
+      store_id:sid, name, price,
+      unit:$("pUnit").value,
+      category_id: $("pCat").value || null
+    });
+    b.disabled=false; b.textContent="添加菜品";
+    if(error){ show($("menuMsg"),"添加失败:"+error.message,"err"); return; }
+    show($("menuMsg"),"已添加 ✓","ok");
+    $("pName").value=""; $("pPrice").value="";
+    loadProducts();
+  };
+
+  async function delProduct(id){
+    if(!confirm("删除这个菜品?")) return;
+    const { error } = await sb.from("products").delete().eq("id",id);
+    if(error){ alert("删除失败:"+error.message); return; }
+    loadProducts();
+  }
+
+  $("addStoreBtn").onclick = async ()=>{
+    hide($("storeMsg"));
+    const name=$("storeName").value.trim();
+    if(!name){ show($("storeMsg"),"请填店铺名称","err"); return; }
+    const b=$("addStoreBtn"); b.disabled=true; b.textContent="添加中…";
+    const { data:{user} } = await sb.auth.getUser();
+    const { error } = await sb.from("stores").insert({
+      boss_id:user.id, name,
+      company_name:$("storeCompany").value.trim()||null,
+      address:$("storeAddr").value.trim()||null,
+      vat_number:$("storeVat").value.trim()||null
+    });
+    b.disabled=false; b.textContent="添加店铺";
+    if(error){ show($("storeMsg"),"添加失败:"+error.message,"err"); return; }
+    show($("storeMsg"),"已添加 ✓","ok");
+    $("storeName").value=$("storeCompany").value=$("storeAddr").value=$("storeVat").value="";
+    loadStores();
+  };
 
   render();
 </script>
