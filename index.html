@@ -215,7 +215,7 @@
     </div>
 
     <div id="settingsTab" class="hidden">
-      <div class="subseg"><button id="ssStore" class="on" data-i18n="set_store">店铺</button><button id="ssNotify" data-i18n="set_notify">通知</button><button id="ssAccount" data-i18n="set_account">账户</button></div>
+      <div class="subseg"><button id="ssStore" class="on" data-i18n="set_store">店铺</button><button id="ssTables" data-i18n="set_tables">桌位</button><button id="ssNotify" data-i18n="set_notify">通知</button><button id="ssAccount" data-i18n="set_account">账户</button></div>
 
       <div id="setStore">
         <label data-i18n="cur_store">当前店铺</label><select id="storeSel"></select>
@@ -225,6 +225,11 @@
         <div class="row2"><div><label data-i18n="address_opt">地址(可选)</label><input id="storeAddr" placeholder="Venezia…" /></div><div><label data-i18n="piva_opt">P.IVA(可选)</label><input id="storeVat" placeholder="IT…" /></div></div>
         <button class="btn" id="addStoreBtn" data-i18n="add_store">添加店铺</button>
         <div class="msg" id="storeMsg"></div>
+      </div>
+
+      <div id="setTables" class="hidden">
+        <div class="row-add"><input id="tableName" data-ph="table_ph" placeholder="桌号,如 1 / 2 / 露台3" /><button class="btn sm" id="addTableBtn" data-i18n="add">添加</button></div>
+        <div class="chips" id="tableList" style="margin-top:12px"></div>
       </div>
 
       <div id="setNotify" class="hidden">
@@ -321,7 +326,9 @@
     test_sent:{zh:"已发送,去 Telegram 看看 ✓",en:"Sent — check Telegram ✓",it:"Inviato — controlla Telegram ✓"},
     test_action:{zh:"测试通知",en:"Test notification",it:"Notifica di prova"},test_detail:{zh:"这是一条来自 easypos 的测试消息",en:"Test message from easypos",it:"Messaggio di prova da easypos"},
     tab_settings:{zh:"设置",en:"Settings",it:"Impostazioni"},mod_tab:{zh:"加料",en:"Add-ons",it:"Extra"},
-    set_store:{zh:"店铺",en:"Shop",it:"Negozio"},set_notify:{zh:"通知",en:"Alerts",it:"Notifiche"},set_account:{zh:"账户",en:"Account",it:"Account"}
+    set_store:{zh:"店铺",en:"Shop",it:"Negozio"},set_notify:{zh:"通知",en:"Alerts",it:"Notifiche"},set_account:{zh:"账户",en:"Account",it:"Account"},
+    set_tables:{zh:"桌位",en:"Tables",it:"Tavoli"},table_ph:{zh:"桌号,如 1 / 2 / 露台3",en:"Table no., e.g. 1 / 2 / Patio3",it:"Tavolo, es. 1 / 2 / Dehor3"},
+    no_tables:{zh:"还没有桌位",en:"No tables yet",it:"Nessun tavolo"},del_table:{zh:"删除这个桌位?",en:"Delete this table?",it:"Eliminare questo tavolo?"}
   };
 
   const $=(id)=>document.getElementById(id);
@@ -350,7 +357,7 @@
   applyI18n();
   if(!window.SUPA_URL||!window.SUPA_KEY||window.SUPA_URL.includes("你的")||window.SUPA_KEY.includes("你的")){ $("cfgView").classList.remove("hidden"); throw new Error("config missing"); }
   const sb=supabase.createClient(window.SUPA_URL,window.SUPA_KEY);
-  let stores=[], categories=[], products=[], groups=[], pmg=[], cart=[], filterCat="all";
+  let stores=[], categories=[], products=[], groups=[], pmg=[], tables=[], cart=[], filterCat="all";
   const storeId=()=>$("storeSel").value||null;
   function groupsForProduct(pid){ const ids=pmg.filter(x=>x.product_id===pid).map(x=>x.group_id); return groups.filter(g=>ids.includes(g.id)); }
 
@@ -382,10 +389,10 @@
   }
   $("smCat").onclick=()=>showMenuSub("cat"); $("smProd").onclick=()=>showMenuSub("prod"); $("smMod").onclick=()=>showMenuSub("mod");
   function showSetSub(w){
-    $("ssStore").classList.toggle("on",w==="store"); $("ssNotify").classList.toggle("on",w==="notify"); $("ssAccount").classList.toggle("on",w==="account");
-    $("setStore").classList.toggle("hidden",w!=="store"); $("setNotify").classList.toggle("hidden",w!=="notify"); $("setAccount").classList.toggle("hidden",w!=="account");
+    $("ssStore").classList.toggle("on",w==="store"); $("ssTables").classList.toggle("on",w==="tables"); $("ssNotify").classList.toggle("on",w==="notify"); $("ssAccount").classList.toggle("on",w==="account");
+    $("setStore").classList.toggle("hidden",w!=="store"); $("setTables").classList.toggle("hidden",w!=="tables"); $("setNotify").classList.toggle("hidden",w!=="notify"); $("setAccount").classList.toggle("hidden",w!=="account");
   }
-  $("ssStore").onclick=()=>showSetSub("store"); $("ssNotify").onclick=()=>showSetSub("notify"); $("ssAccount").onclick=()=>showSetSub("account");
+  $("ssStore").onclick=()=>showSetSub("store"); $("ssTables").onclick=()=>showSetSub("tables"); $("ssNotify").onclick=()=>showSetSub("notify"); $("ssAccount").onclick=()=>showSetSub("account");
 
   async function loadStores(){
     const {data,error}=await sb.from("stores").select("*").order("created_at");
@@ -396,7 +403,7 @@
     await reloadStore();
   }
   $("storeSel").onchange=reloadStore;
-  async function reloadStore(){ cart=[]; renderCart(); await loadCategories(); await loadGroups(); await loadPmg(); await loadProducts(); await loadToday(); }
+  async function reloadStore(){ cart=[]; renderCart(); await loadCategories(); await loadGroups(); await loadPmg(); await loadProducts(); await loadTables(); await loadToday(); }
 
   async function loadCategories(){
     const sid=storeId(); if(!sid)return;
@@ -659,6 +666,21 @@
     reportItems.forEach(it=>rows.push([it.name, it.qty, amtIt(it.rev)]));
     shareCSV("easypos_items_"+$("repDate").value+".csv", toCSV(rows));
   };
+
+  async function loadTables(){
+    const sid=storeId(); const el=$("tableList"); if(!sid){ tables=[]; if(el)el.innerHTML=""; return; }
+    const {data,error}=await sb.from("tables").select("*").eq("store_id",sid).order("sort_order").order("created_at");
+    tables=error?[]:(data||[]);
+    if(el){ el.innerHTML=tables.length?tables.map(tb=>`<span class="chip">${esc(tb.name)} <span class="x" data-tbl="${tb.id}">✕</span></span>`).join(""):`<div class="empty" style="width:100%">${t("no_tables")}</div>`;
+      el.querySelectorAll('.x').forEach(x=>x.onclick=()=>delTable(x.dataset.tbl)); }
+  }
+  $("addTableBtn").onclick=async()=>{
+    const sid=storeId(); const name=$("tableName").value.trim();
+    if(!sid){alert(t("need_store"));return;} if(!name)return;
+    const {error}=await sb.from("tables").insert({store_id:sid,name});
+    if(error){alert(t("fail")+error.message);return;} $("tableName").value=""; loadTables();
+  };
+  async function delTable(id){ if(!confirm(t("del_table")))return; const {error}=await sb.from("tables").delete().eq("id",id); if(error){alert(error.message);return;} loadTables(); }
 
   async function loadNotifyConfig(){
     const {data:{user}}=await sb.auth.getUser(); if(!user)return;
