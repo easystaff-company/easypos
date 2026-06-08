@@ -75,7 +75,8 @@
   .row-add{display:flex;gap:8px}.row-add input{flex:1}
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .chkrow{display:flex;align-items:center;gap:8px;background:var(--soft);border-radius:11px;padding:13px 14px;font-weight:600;color:var(--ink);font-size:15px;margin:0}
-  .chkrow input{width:20px;height:20px;accent-color:var(--gold);flex:none}
+  .chkrow input{-webkit-appearance:auto;appearance:auto;width:22px;height:22px;min-width:22px;padding:0;accent-color:var(--gold);flex:none;box-shadow:none}
+  input[type=checkbox]{-webkit-appearance:auto;appearance:auto;accent-color:var(--gold)}
   .item{display:flex;align-items:center;gap:12px;padding:12px 13px;border-radius:12px;background:var(--soft)}
   .iteminfo{flex:1;cursor:pointer}
   .item .nm{font-weight:700;font-size:16px}.item .meta{font-size:13px;color:var(--muted);margin-top:1px}
@@ -127,6 +128,7 @@
   .optrow .ck{width:20px;height:20px;border-radius:50%;border:2px solid var(--line);flex:none;display:grid;place-items:center;font-size:12px;font-weight:800;color:#1a1a1e}
   .optrow.sel{border-color:var(--gold);background:rgba(230,180,80,.10)}
   .optrow.sel .ck{background:var(--gold);border-color:var(--gold)}
+  .optrow.sel .ck::after{content:"✓"}
 </style>
 </head>
 <body>

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0d0d10" />
+<title>easypos · 后台</title>
+<link rel="icon" type="image/png" href="icon.png" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0d0d10;--card:#1a1a1f;--soft:#23232a;--ink:#f3f0e9;--muted:#8d8d96;--line:#2e2e36;--gold:#e6b450;--gold2:#d89b2e;--ok:#34d164;--err:#ff5a4d;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:radial-gradient(135% 90% at 50% -10%,#1c1c22 0%,#0c0c0f 55%) fixed;color:var(--ink);font-family:'Outfit',system-ui,sans-serif;-webkit-font-smoothing:antialiased;display:flex;justify-content:center;padding:max(18px,env(safe-area-inset-top)) 16px 44px;min-height:100dvh}
+  .wrap{width:100%;max-width:560px}
+  .appbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .brand{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:22px}
+  .brand span{color:var(--gold)}
+  .card{background:var(--card);border:1px solid #23232b;border-radius:16px;padding:18px 16px;margin-bottom:16px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+  h1{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:22px;margin-bottom:4px}
+  .sub{color:var(--muted);font-size:14px;margin-bottom:16px}
+  label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:12px 0 6px}
+  input,select,textarea{width:100%;padding:12px 13px;border:none;border-radius:10px;font:inherit;font-size:16px;background:var(--soft);color:var(--ink);outline:none;-webkit-appearance:none;appearance:none}
+  input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(230,180,80,.32)}
+  select{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%238d8d96' stroke-width='2' fill='none' stroke-linecap='round'/></svg>");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+  button{font:inherit;cursor:pointer;border:none}
+  .btn{width:100%;margin-top:14px;padding:14px;border-radius:12px;background:linear-gradient(180deg,var(--gold),var(--gold2));color:#1a1a1e;font-weight:800;font-size:16px}
+  .btn:active{opacity:.9}.btn:disabled{opacity:.4}
+  .btn.ghost{background:var(--soft);color:var(--gold);width:auto;margin:0;padding:9px 13px;font-size:14px;font-weight:700;border-radius:10px}
+  .btn.sm{width:auto;margin:0;padding:10px 13px;font-size:14px;border-radius:10px;flex:1}
+  .msg{margin-top:12px;font-size:14px;padding:10px 12px;border-radius:10px;display:none}
+  .msg.show{display:block}.msg.err{background:rgba(255,90,77,.16);color:var(--err)}.msg.ok{background:rgba(52,209,100,.16);color:var(--ok)}
+  .hidden{display:none!important}
+  .section-t{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:8px 2px 10px}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+  .ucard{background:var(--soft);border-radius:12px;padding:14px;margin-bottom:10px}
+  .uemail{font-weight:700;font-size:15px;word-break:break-all}
+  .badge{display:inline-block;font-size:11px;font-weight:800;padding:3px 8px;border-radius:999px;margin-top:4px}
+  .badge.trial{background:rgba(230,180,80,.2);color:var(--gold)}
+  .badge.active{background:rgba(52,209,100,.18);color:var(--ok)}
+  .badge.expired,.badge.suspended{background:rgba(255,90,77,.18);color:var(--err)}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .qrow{display:flex;gap:8px;margin-top:10px}
+  .stat{font-size:13px;color:var(--muted);margin:10px 2px}
+  textarea{min-height:46px;resize:vertical}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="appbar"><div class="brand">easy<span>pos</span> · 后台</div><button class="btn ghost hidden" id="logoutBtn">退出</button></div>
+
+  <div class="card hidden" id="cfgView"><div class="msg err show">没读到 config.js,请确认它和 admin.html 在同一文件夹。</div></div>
+
+  <div class="card hidden" id="loginView">
+    <h1>后台登录</h1><div class="sub">用管理员账号登录</div>
+    <label>邮箱</label><input id="email" type="email" autocomplete="username" />
+    <label>密码</label><input id="password" type="password" autocomplete="current-password" />
+    <button class="btn" id="loginBtn">登录</button>
+    <div class="msg err" id="loginMsg"></div>
+  </div>
+
+  <div class="card hidden" id="denyView">
+    <h1>无权限</h1><div class="sub">这个账号不是管理员。如果需要,请在数据库 admins 表里加上它。</div>
+  </div>
+
+  <div id="adminView" class="hidden">
+    <div class="card">
+      <div class="section-t">平台通知 (Telegram · 新用户注册)</div>
+      <label>Bot Token</label><input id="pToken" placeholder="123456:ABC..." />
+      <label>接收注册通知的 Chat ID</label><input id="pChat" placeholder="123456789" />
+      <label style="display:flex;align-items:center;gap:8px;margin-top:12px"><input type="checkbox" id="pEnabled" style="width:22px;height:22px;-webkit-appearance:auto;appearance:auto;accent-color:var(--gold)" /> 开启注册通知</label>
+      <button class="btn" id="savePlatformBtn">保存平台设置</button>
+      <div class="msg" id="platformMsg"></div>
+    </div>
+
+    <div class="card">
+      <div class="top"><div class="section-t" style="margin:0">用户</div><div class="stat" id="userCount"></div></div>
+      <input id="search" placeholder="搜索邮箱…" />
+      <div id="userList" style="margin-top:12px"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const $=(id)=>document.getElementById(id);
+  const show=(el,t,k)=>{el.textContent=t;el.className="msg show "+(k||"");};
+  const hide=(el)=>{el.className="msg";};
+  const esc=(s)=>String(s==null?"":s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const STATUS={trial:"试用",active:"已付费",expired:"过期",suspended:"停用"};
+
+  if(!window.SUPA_URL||!window.SUPA_KEY){ $("cfgView").classList.remove("hidden"); throw new Error("no config"); }
+  const sb=supabase.createClient(window.SUPA_URL,window.SUPA_KEY);
+  let users=[];
+
+  async function render(){
+    const {data:{session}}=await sb.auth.getSession();
+    if(!session){ $("adminView").classList.add("hidden"); $("denyView").classList.add("hidden"); $("logoutBtn").classList.add("hidden"); $("loginView").classList.remove("hidden"); return; }
+    $("loginView").classList.add("hidden"); $("logoutBtn").classList.remove("hidden");
+    const {data:adm}=await sb.from("admins").select("user_id").eq("user_id",session.user.id).maybeSingle();
+    if(!adm){ $("denyView").classList.remove("hidden"); $("adminView").classList.add("hidden"); return; }
+    $("denyView").classList.add("hidden"); $("adminView").classList.remove("hidden");
+    await loadPlatform(); await loadUsers();
+  }
+  $("loginBtn").onclick=async()=>{
+    hide($("loginMsg")); const b=$("loginBtn"); b.disabled=true; b.textContent="登录中…";
+    const {error}=await sb.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});
+    b.disabled=false; b.textContent="登录";
+    if(error){show($("loginMsg"),"登录失败:"+error.message,"err");return;} render();
+  };
+  $("logoutBtn").onclick=async()=>{ await sb.auth.signOut(); render(); };
+
+  async function loadPlatform(){
+    const {data}=await sb.from("platform_config").select("*").eq("id",1).maybeSingle();
+    if(data){ $("pToken").value=data.dev_token||""; $("pChat").value=data.dev_chat_id||""; $("pEnabled").checked=data.notify_signups!==false; }
+    else { $("pEnabled").checked=true; }
+  }
+  $("savePlatformBtn").onclick=async()=>{
+    hide($("platformMsg")); const b=$("savePlatformBtn"); b.disabled=true; b.textContent="保存中…";
+    const {error}=await sb.from("platform_config").upsert({id:1,dev_token:$("pToken").value.trim()||null,dev_chat_id:$("pChat").value.trim()||null,notify_signups:$("pEnabled").checked});
+    b.disabled=false; b.textContent="保存平台设置";
+    if(error){show($("platformMsg"),"失败:"+error.message,"err");return;}
+    show($("platformMsg"),"已保存 ✓","ok");
+  };
+
+  async function loadUsers(){
+    const [{data:subs},{data:bosses}]=await Promise.all([
+      sb.from("subscriptions").select("*"),
+      sb.from("bosses").select("id,email")
+    ]);
+    const emap={}; (bosses||[]).forEach(b=>emap[b.id]=b.email);
+    users=(subs||[]).map(s=>({...s,email:emap[s.boss_id]||"(无邮箱)"}))
+      .sort((a,b)=>String(a.email).localeCompare(String(b.email)));
+    renderUsers();
+  }
+  function renderUsers(){
+    const q=$("search").value.trim().toLowerCase();
+    const list=users.filter(u=>!q||String(u.email).toLowerCase().includes(q));
+    $("userCount").textContent=users.length+" 个用户";
+    if(!list.length){ $("userList").innerHTML=`<div class="stat">没有匹配的用户</div>`; return; }
+    $("userList").innerHTML=list.map(u=>{
+      const st=u.status||"trial";
+      return `<div class="ucard" data-id="${u.boss_id}">
+        <div class="uemail">${esc(u.email)}</div>
+        <span class="badge ${st}">${STATUS[st]||st}</span>
+        <div class="row2" style="margin-top:10px">
+          <div><label>状态</label><select data-f="status">${Object.keys(STATUS).map(k=>`<option value="${k}" ${k===st?"selected":""}>${STATUS[k]}</option>`).join("")}</select></div>
+          <div><label>套餐</label><input data-f="plan" value="${esc(u.plan||"")}" placeholder="basic" /></div>
+        </div>
+        <div class="row2">
+          <div><label>试用到期</label><input type="date" data-f="trial_ends_at" value="${u.trial_ends_at||""}" /></div>
+          <div><label>付费到期</label><input type="date" data-f="paid_until" value="${u.paid_until||""}" /></div>
+        </div>
+        <label>备注</label><textarea data-f="notes" placeholder="备注…">${esc(u.notes||"")}</textarea>
+        <div class="qrow">
+          <button class="btn sm ghost" data-q="trial30">试用+30天</button>
+          <button class="btn sm ghost" data-q="paid1y">标记已付费1年</button>
+        </div>
+        <button class="btn" data-save="${u.boss_id}">保存</button>
+        <div class="msg" data-msg="${u.boss_id}"></div>
+      </div>`;
+    }).join("");
+    $("userList").querySelectorAll('[data-save]').forEach(b=>b.onclick=()=>saveUser(b.dataset.save));
+    $("userList").querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{
+      const card=b.closest('.ucard'); quickAction(card.dataset.id,b.dataset.q,card);
+    });
+  }
+  function readCard(id){
+    const card=$("userList").querySelector(`.ucard[data-id="${id}"]`);
+    const g=(f)=>card.querySelector(`[data-f="${f}"]`).value;
+    return {status:g("status"),plan:g("plan").trim()||null,trial_ends_at:g("trial_ends_at")||null,paid_until:g("paid_until")||null,notes:g("notes").trim()||null};
+  }
+  async function saveUser(id){
+    const card=$("userList").querySelector(`.ucard[data-id="${id}"]`);
+    const msg=card.querySelector('[data-msg]'); hide(msg);
+    const vals=readCard(id); vals.updated_at=new Date().toISOString();
+    const {error}=await sb.from("subscriptions").update(vals).eq("boss_id",id);
+    if(error){show(msg,"失败:"+error.message,"err");return;}
+    const u=users.find(x=>x.boss_id===id); Object.assign(u,vals);
+    show(msg,"已保存 ✓","ok"); setTimeout(()=>{hide(msg);renderUsers();},900);
+  }
+  function addDays(n){ const d=new Date(); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
+  async function quickAction(id,kind,card){
+    const msg=card.querySelector('[data-msg]'); hide(msg);
+    let vals;
+    if(kind==="trial30"){ vals={status:"trial",trial_ends_at:addDays(30)}; }
+    else { vals={status:"active",paid_until:addDays(365)}; }
+    vals.updated_at=new Date().toISOString();
+    const {error}=await sb.from("subscriptions").update(vals).eq("boss_id",id);
+    if(error){show(msg,"失败:"+error.message,"err");return;}
+    const u=users.find(x=>x.boss_id===id); Object.assign(u,vals);
+    show(msg,"已更新 ✓","ok"); setTimeout(()=>{renderUsers();},700);
+  }
+  $("search").oninput=renderUsers;
+
+  render();
+</script>
+</body>
+</html>
