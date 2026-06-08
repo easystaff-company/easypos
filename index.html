@@ -45,8 +45,11 @@
   .who{font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .who b{color:var(--ink);font-weight:700}
   .seg{display:flex;background:#15151a;border:1px solid #2a2a32;border-radius:13px;padding:4px;margin:14px 0 2px}
-  .seg button{flex:1;padding:10px;border-radius:10px;background:transparent;color:var(--muted);font-weight:700;font-size:15px}
+  .seg button{flex:1;padding:10px 3px;border-radius:10px;background:transparent;color:var(--muted);font-weight:700;font-size:14px}
   .seg button.on{background:linear-gradient(180deg,var(--gold),var(--gold2));color:#1a1a1e}
+  .subseg{display:flex;gap:8px;margin:0 0 16px}
+  .subseg button{flex:1;padding:9px;border-radius:10px;background:var(--soft);color:var(--muted);font-weight:700;font-size:14px}
+  .subseg button.on{background:rgba(230,180,80,.16);color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}
   .today{font-size:13px;color:var(--muted);margin:12px 2px 12px;font-weight:600}
   .today b{color:var(--gold);font-weight:800}
   .section-t{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:16px 0 10px;padding:0 2px}
@@ -150,9 +153,7 @@
   </div>
 
   <div class="card hidden" id="appView">
-    <div class="top"><div class="who"><span data-i18n="account">账户:</span><b id="userEmail">—</b></div><button class="btn ghost" id="logoutBtn" data-i18n="logout">退出</button></div>
-    <label data-i18n="cur_store">当前店铺</label><select id="storeSel"></select>
-    <div class="seg"><button id="tabSell" class="on" data-i18n="tab_sell">收银</button><button id="tabOrders" data-i18n="tab_orders">订单</button><button id="tabMenu" data-i18n="tab_menu">菜单</button><button id="tabReport" data-i18n="tab_report">汇总</button></div>
+    <div class="seg"><button id="tabSell" class="on" data-i18n="tab_sell">收银</button><button id="tabOrders" data-i18n="tab_orders">订单</button><button id="tabReport" data-i18n="tab_report">汇总</button><button id="tabMenu" data-i18n="tab_menu">菜单</button><button id="tabSettings" data-i18n="tab_settings">设置</button></div>
 
     <div id="sellTab">
       <div class="today" id="today"></div>
@@ -183,48 +184,62 @@
     </div>
 
     <div id="menuTab" class="hidden">
-      <div class="section-t" data-i18n="cat">分类</div>
-      <div class="row-add"><input id="catName" data-ph="cat_ph" placeholder="如:咖啡 / 早午餐 / 甜点" /><button class="btn sm" id="addCatBtn" data-i18n="add">添加</button></div>
-      <div class="chips" id="catList" style="margin-top:12px"></div>
+      <div class="subseg"><button id="smCat" class="on" data-i18n="cat">分类</button><button id="smProd" data-i18n="products">菜品</button><button id="smMod" data-i18n="mod_tab">加料</button></div>
 
-      <div class="section-t" data-i18n="products">菜品</div>
-      <label data-i18n="name">名称</label><input id="pName" data-ph="name_ph" placeholder="如:Cappuccino" />
-      <div class="row2">
-        <div><label data-i18n="price">价格 €</label><input id="pPrice" type="number" inputmode="decimal" step="0.01" placeholder="0.00" /></div>
-        <div><label data-i18n="unit">单位</label><select id="pUnit"><option value="piece" data-i18n="piece">计件</option><option value="weight" data-i18n="weight">称重</option></select></div>
+      <div id="menuCat">
+        <div class="row-add"><input id="catName" data-ph="cat_ph" placeholder="如:咖啡 / 早午餐 / 甜点" /><button class="btn sm" id="addCatBtn" data-i18n="add">添加</button></div>
+        <div class="chips" id="catList" style="margin-top:12px"></div>
       </div>
-      <label data-i18n="cat">分类</label><select id="pCat"></select>
-      <button class="btn" id="addProdBtn" data-i18n="add_prod">添加菜品</button>
-      <div class="msg" id="menuMsg"></div>
-      <div id="prodList" style="margin-top:14px"></div>
 
-      <div class="section-t" data-i18n="mod_groups">选项组</div>
-      <input id="mgName" data-ph="mg_name_ph" placeholder="组名(如 牛奶/份量)" />
-      <div class="row2" style="margin-top:10px">
-        <select id="mgType"><option value="single" data-i18n="single">单选</option><option value="multi" data-i18n="multi">多选</option></select>
-        <label class="chkrow"><input type="checkbox" id="mgReq" /> <span data-i18n="required">必选</span></label>
+      <div id="menuProd" class="hidden">
+        <label data-i18n="name">名称</label><input id="pName" data-ph="name_ph" placeholder="如:Cappuccino" />
+        <div class="row2">
+          <div><label data-i18n="price">价格 €</label><input id="pPrice" type="number" inputmode="decimal" step="0.01" placeholder="0.00" /></div>
+          <div><label data-i18n="unit">单位</label><select id="pUnit"><option value="piece" data-i18n="piece">计件</option><option value="weight" data-i18n="weight">称重</option></select></div>
+        </div>
+        <label data-i18n="cat">分类</label><select id="pCat"></select>
+        <button class="btn" id="addProdBtn" data-i18n="add_prod">添加菜品</button>
+        <div class="msg" id="menuMsg"></div>
+        <div id="prodList" style="margin-top:14px"></div>
       </div>
-      <button class="btn sm" id="addMgBtn" style="margin-top:10px" data-i18n="add_group">加选项组</button>
-      <div id="mgList" style="margin-top:12px"></div>
 
-      <details>
-        <summary data-i18n="store_settings">店铺设置 / 添加店铺</summary>
+      <div id="menuMod" class="hidden">
+        <input id="mgName" data-ph="mg_name_ph" placeholder="组名(如 牛奶/份量)" />
+        <div class="row2" style="margin-top:10px">
+          <select id="mgType"><option value="single" data-i18n="single">单选</option><option value="multi" data-i18n="multi">多选</option></select>
+          <label class="chkrow"><input type="checkbox" id="mgReq" /> <span data-i18n="required">必选</span></label>
+        </div>
+        <button class="btn sm" id="addMgBtn" style="margin-top:10px" data-i18n="add_group">加选项组</button>
+        <div id="mgList" style="margin-top:12px"></div>
+      </div>
+    </div>
+
+    <div id="settingsTab" class="hidden">
+      <div class="subseg"><button id="ssStore" class="on" data-i18n="set_store">店铺</button><button id="ssNotify" data-i18n="set_notify">通知</button><button id="ssAccount" data-i18n="set_account">账户</button></div>
+
+      <div id="setStore">
+        <label data-i18n="cur_store">当前店铺</label><select id="storeSel"></select>
+        <div class="section-t" data-i18n="store_settings" style="margin-top:16px">店铺设置 / 添加店铺</div>
         <label data-i18n="store_name">店铺名称(显示名)</label><input id="storeName" placeholder="Fluffy Brunch" />
         <label data-i18n="company">公司名称</label><input id="storeCompany" placeholder="Fluffy Brunch S.r.l." />
         <div class="row2"><div><label data-i18n="address_opt">地址(可选)</label><input id="storeAddr" placeholder="Venezia…" /></div><div><label data-i18n="piva_opt">P.IVA(可选)</label><input id="storeVat" placeholder="IT…" /></div></div>
         <button class="btn" id="addStoreBtn" data-i18n="add_store">添加店铺</button>
         <div class="msg" id="storeMsg"></div>
-      </details>
+      </div>
 
-      <details>
-        <summary data-i18n="notify_settings">通知设置 (Telegram)</summary>
+      <div id="setNotify" class="hidden">
         <label data-i18n="nt_token">Bot Token</label><input id="ntToken" placeholder="123456:ABC..." />
         <label data-i18n="nt_chat">Chat ID</label><input id="ntChat" placeholder="123456789" />
         <label class="chkrow" style="margin-top:12px"><input type="checkbox" id="ntEnabled" checked /> <span data-i18n="nt_enabled">开启通知</span></label>
         <button class="btn" id="saveNotifyBtn" data-i18n="save_btn">保存</button>
         <button class="btn ghost" id="testNotifyBtn" style="width:100%;margin-top:10px;text-align:center" data-i18n="test_notify">发送测试通知</button>
         <div class="msg" id="notifyMsg"></div>
-      </details>
+      </div>
+
+      <div id="setAccount" class="hidden">
+        <div class="who" style="font-size:15px;margin-bottom:16px"><span data-i18n="account">账户:</span> <b id="userEmail">—</b></div>
+        <button class="btn ghost" id="logoutBtn" style="width:100%;text-align:center" data-i18n="logout">退出</button>
+      </div>
     </div>
 
     <div id="reportTab" class="hidden">
@@ -304,7 +319,9 @@
     nt_enabled:{zh:"开启通知",en:"Enable notifications",it:"Attiva notifiche"},save_btn:{zh:"保存",en:"Save",it:"Salva"},
     saved_ok:{zh:"已保存 ✓",en:"Saved ✓",it:"Salvato ✓"},test_notify:{zh:"发送测试通知",en:"Send test notification",it:"Invia notifica di prova"},
     test_sent:{zh:"已发送,去 Telegram 看看 ✓",en:"Sent — check Telegram ✓",it:"Inviato — controlla Telegram ✓"},
-    test_action:{zh:"测试通知",en:"Test notification",it:"Notifica di prova"},test_detail:{zh:"这是一条来自 easypos 的测试消息",en:"Test message from easypos",it:"Messaggio di prova da easypos"}
+    test_action:{zh:"测试通知",en:"Test notification",it:"Notifica di prova"},test_detail:{zh:"这是一条来自 easypos 的测试消息",en:"Test message from easypos",it:"Messaggio di prova da easypos"},
+    tab_settings:{zh:"设置",en:"Settings",it:"Impostazioni"},mod_tab:{zh:"加料",en:"Add-ons",it:"Extra"},
+    set_store:{zh:"店铺",en:"Shop",it:"Negozio"},set_notify:{zh:"通知",en:"Alerts",it:"Notifiche"},set_account:{zh:"账户",en:"Account",it:"Account"}
   };
 
   const $=(id)=>document.getElementById(id);
@@ -350,13 +367,25 @@
   };
   $("logoutBtn").onclick=async()=>{await sb.auth.signOut(); render();};
 
-  $("tabSell").onclick=()=>switchTab("sell"); $("tabOrders").onclick=()=>switchTab("orders"); $("tabMenu").onclick=()=>switchTab("menu"); $("tabReport").onclick=()=>switchTab("report");
+  $("tabSell").onclick=()=>switchTab("sell"); $("tabOrders").onclick=()=>switchTab("orders"); $("tabMenu").onclick=()=>switchTab("menu"); $("tabReport").onclick=()=>switchTab("report"); $("tabSettings").onclick=()=>switchTab("settings");
   function switchTab(tab){
-    $("tabSell").classList.toggle("on",tab==="sell"); $("tabOrders").classList.toggle("on",tab==="orders"); $("tabMenu").classList.toggle("on",tab==="menu"); $("tabReport").classList.toggle("on",tab==="report");
-    $("sellTab").classList.toggle("hidden",tab!=="sell"); $("ordersTab").classList.toggle("hidden",tab!=="orders"); $("menuTab").classList.toggle("hidden",tab!=="menu"); $("reportTab").classList.toggle("hidden",tab!=="report");
+    const tabs={sell:"tabSell",orders:"tabOrders",report:"tabReport",menu:"tabMenu",settings:"tabSettings"};
+    const panes={sell:"sellTab",orders:"ordersTab",report:"reportTab",menu:"menuTab",settings:"settingsTab"};
+    for(const k in tabs)$(tabs[k]).classList.toggle("on",k===tab);
+    for(const k in panes)$(panes[k]).classList.toggle("hidden",k!==tab);
     if(tab==="orders")loadOrders();
     if(tab==="report")loadReport();
   }
+  function showMenuSub(w){
+    $("smCat").classList.toggle("on",w==="cat"); $("smProd").classList.toggle("on",w==="prod"); $("smMod").classList.toggle("on",w==="mod");
+    $("menuCat").classList.toggle("hidden",w!=="cat"); $("menuProd").classList.toggle("hidden",w!=="prod"); $("menuMod").classList.toggle("hidden",w!=="mod");
+  }
+  $("smCat").onclick=()=>showMenuSub("cat"); $("smProd").onclick=()=>showMenuSub("prod"); $("smMod").onclick=()=>showMenuSub("mod");
+  function showSetSub(w){
+    $("ssStore").classList.toggle("on",w==="store"); $("ssNotify").classList.toggle("on",w==="notify"); $("ssAccount").classList.toggle("on",w==="account");
+    $("setStore").classList.toggle("hidden",w!=="store"); $("setNotify").classList.toggle("hidden",w!=="notify"); $("setAccount").classList.toggle("hidden",w!=="account");
+  }
+  $("ssStore").onclick=()=>showSetSub("store"); $("ssNotify").onclick=()=>showSetSub("notify"); $("ssAccount").onclick=()=>showSetSub("account");
 
   async function loadStores(){
     const {data,error}=await sb.from("stores").select("*").order("created_at");
