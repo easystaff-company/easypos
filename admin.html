@@ -72,6 +72,7 @@
       <label>接收注册通知的 Chat ID</label><input id="pChat" placeholder="123456789" />
       <label style="display:flex;align-items:center;gap:8px;margin-top:12px"><input type="checkbox" id="pEnabled" style="width:22px;height:22px;-webkit-appearance:auto;appearance:auto;accent-color:var(--gold)" /> 开启注册通知</label>
       <button class="btn" id="savePlatformBtn">保存平台设置</button>
+      <button class="btn ghost" id="testPlatformBtn" style="width:100%;margin-top:10px;text-align:center">发送测试</button>
       <div class="msg" id="platformMsg"></div>
     </div>
 
@@ -122,6 +123,17 @@
     b.disabled=false; b.textContent="保存平台设置";
     if(error){show($("platformMsg"),"失败:"+error.message,"err");return;}
     show($("platformMsg"),"已保存 ✓","ok");
+  };
+  $("testPlatformBtn").onclick=async()=>{
+    hide($("platformMsg")); const b=$("testPlatformBtn"); b.disabled=true; b.textContent="发送中…";
+    await sb.from("platform_config").upsert({id:1,dev_token:$("pToken").value.trim()||null,dev_chat_id:$("pChat").value.trim()||null,notify_signups:$("pEnabled").checked});
+    const {data,error}=await sb.rpc("test_platform_notify");
+    b.disabled=false; b.textContent="发送测试";
+    if(error){show($("platformMsg"),"失败:"+error.message,"err");return;}
+    if(data==="ok")show($("platformMsg"),"已发送,去 Telegram 看看 ✓","ok");
+    else if(data==="no_config")show($("platformMsg"),"请先填 Token 和 Chat ID","err");
+    else if(data==="not_admin")show($("platformMsg"),"无管理员权限","err");
+    else show($("platformMsg"),"结果:"+data,"err");
   };
 
   async function loadUsers(){
