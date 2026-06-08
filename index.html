@@ -75,6 +75,17 @@
   .item .nm{font-weight:600;font-size:16px}.item .meta{font-size:13px;color:var(--muted);margin-top:1px}
   .item .pr{margin-left:auto;font-weight:700;white-space:nowrap}.item .x{color:var(--muted);font-weight:700;cursor:pointer;padding-left:6px}
   .empty{color:var(--muted);font-size:14px;padding:14px;border:1px dashed var(--line);border-radius:11px;text-align:center}
+  .order{background:var(--bg3);border-radius:11px;margin-bottom:8px;overflow:hidden}
+  .ohead{display:flex;align-items:center;justify-content:space-between;padding:12px 13px;cursor:pointer;gap:10px}
+  .ohead .nm{font-weight:700;font-size:16px}.ohead .meta{font-size:12px;color:var(--muted);margin-top:1px}
+  .chev{color:var(--muted);font-size:13px}
+  .odetail{padding:0 13px 13px}
+  .rcpt{background:var(--bg2);border-radius:10px;padding:14px}
+  .rtitle{font-weight:700;text-align:center;font-size:15px}
+  .rmeta{text-align:center;color:var(--muted);font-size:12px;margin-bottom:10px}
+  .rline{display:flex;justify-content:space-between;font-size:14px;padding:3px 0;gap:10px}
+  .rtot{font-weight:700;border-top:1px solid var(--line);margin-top:6px;padding-top:8px}
+  .rnote{margin-top:10px;text-align:center;color:var(--muted);font-size:11px}
   details{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}
   summary{color:var(--accent);font-size:14px;font-weight:600;cursor:pointer;padding:8px 0;list-style:none}
   summary::-webkit-details-marker{display:none}
@@ -84,9 +95,7 @@
 <body>
 <div class="wrap">
 
-  <div class="langbar">
-    <button data-lang="zh">中</button><button data-lang="en">EN</button><button data-lang="it">IT</button>
-  </div>
+  <div class="langbar"><button data-lang="zh">中</button><button data-lang="en">EN</button><button data-lang="it">IT</button></div>
 
   <div class="brand">
     <svg class="logo-note" viewBox="0 0 200 100" role="img" aria-label="easypos">
@@ -108,23 +117,18 @@
   </div>
 
   <div class="card hidden" id="appView">
-    <div class="top">
-      <div class="who"><span data-i18n="account">账户:</span><b id="userEmail">—</b></div>
-      <button class="btn ghost" id="logoutBtn" data-i18n="logout">退出</button>
-    </div>
+    <div class="top"><div class="who"><span data-i18n="account">账户:</span><b id="userEmail">—</b></div><button class="btn ghost" id="logoutBtn" data-i18n="logout">退出</button></div>
     <label data-i18n="cur_store">当前店铺</label><select id="storeSel"></select>
-    <div class="seg"><button id="tabSell" class="on" data-i18n="tab_sell">收银</button><button id="tabMenu" data-i18n="tab_menu">菜单</button></div>
+    <div class="seg"><button id="tabSell" class="on" data-i18n="tab_sell">收银</button><button id="tabOrders" data-i18n="tab_orders">订单</button><button id="tabMenu" data-i18n="tab_menu">菜单</button></div>
 
     <div id="sellTab">
       <div class="today" id="today"></div>
       <div class="filter" id="catFilter"></div>
       <div class="grid-prod" id="prodGrid"></div>
-
       <div class="section-t" data-i18n="cart">购物车</div>
       <div id="cart"></div>
       <div class="total-row"><span data-i18n="total">合计</span><b id="cartTotal">€0.00</b></div>
       <button class="btn" id="checkoutBtn" disabled data-i18n="checkout">结账</button>
-
       <div id="checkoutPanel" class="hidden" style="margin-top:14px">
         <label data-i18n="cash_received">收到现金 €</label>
         <input id="cashInput" type="number" inputmode="decimal" step="0.01" placeholder="0.00" />
@@ -135,11 +139,15 @@
       </div>
     </div>
 
+    <div id="ordersTab" class="hidden">
+      <div class="section-t" data-i18n="tab_orders">订单</div>
+      <div id="ordersList"></div>
+    </div>
+
     <div id="menuTab" class="hidden">
       <div class="section-t" data-i18n="cat">分类</div>
       <div class="row-add"><input id="catName" data-ph="cat_ph" placeholder="如:咖啡 / 早午餐 / 甜点" /><button class="btn sm" id="addCatBtn" data-i18n="add">添加</button></div>
       <div class="chips" id="catList" style="margin-top:12px"></div>
-
       <div class="section-t" data-i18n="products">菜品</div>
       <label data-i18n="name">名称</label><input id="pName" data-ph="name_ph" placeholder="如:Cappuccino" />
       <div class="row2">
@@ -150,7 +158,6 @@
       <button class="btn" id="addProdBtn" data-i18n="add_prod">添加菜品</button>
       <div class="msg" id="menuMsg"></div>
       <div id="prodList" style="margin-top:14px"></div>
-
       <details>
         <summary data-i18n="store_settings">店铺设置 / 添加店铺</summary>
         <label data-i18n="store_name">店铺名称(显示名)</label><input id="storeName" placeholder="Fluffy Brunch" />
@@ -178,9 +185,14 @@
     cur_store:{zh:"当前店铺",en:"Current shop",it:"Negozio attuale"},
     no_store_opt:{zh:"（请先在「菜单」里添加店铺）",en:"(Add a shop in “Menu” first)",it:"(Aggiungi un negozio in “Menu”)"},
     tab_sell:{zh:"收银",en:"Sell",it:"Cassa"},
+    tab_orders:{zh:"订单",en:"Orders",it:"Ordini"},
     tab_menu:{zh:"菜单",en:"Menu",it:"Menu"},
     today:{zh:"今日",en:"Today",it:"Oggi"},
     orders_unit:{zh:"单",en:"orders",it:"ordini"},
+    items_word:{zh:"件",en:"items",it:"art."},
+    no_orders:{zh:"还没有订单",en:"No orders yet",it:"Nessun ordine"},
+    paid_cash:{zh:"收现金",en:"Cash paid",it:"Contanti"},
+    receipt_note:{zh:"内部凭证 · 非正式税务小票",en:"Internal record · not a fiscal receipt",it:"Documento interno · non valido fiscalmente"},
     all:{zh:"全部",en:"All",it:"Tutti"},
     cart:{zh:"购物车",en:"Cart",it:"Carrello"},
     cart_empty:{zh:"点上面的菜品加入",en:"Tap items above to add",it:"Tocca i prodotti sopra"},
@@ -239,7 +251,7 @@
   function switchLang(l){
     lang=l; try{localStorage.setItem("lang",l);}catch(e){}
     applyI18n(); renderCart(); renderFilter();
-    if(storeId()){ loadCategories(); loadProducts(); loadToday(); }
+    if(storeId()){ loadCategories(); loadProducts(); loadToday(); if(!$("ordersTab").classList.contains("hidden"))loadOrders(); }
   }
   document.querySelectorAll(".langbar button").forEach(b=>b.onclick=()=>switchLang(b.dataset.lang));
 
@@ -250,10 +262,7 @@
   function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 
   applyI18n();
-
-  if(!window.SUPA_URL||!window.SUPA_KEY||window.SUPA_URL.includes("你的")||window.SUPA_KEY.includes("你的")){
-    $("cfgView").classList.remove("hidden"); throw new Error("config missing");
-  }
+  if(!window.SUPA_URL||!window.SUPA_KEY||window.SUPA_URL.includes("你的")||window.SUPA_KEY.includes("你的")){ $("cfgView").classList.remove("hidden"); throw new Error("config missing"); }
   const sb=supabase.createClient(window.SUPA_URL,window.SUPA_KEY);
   let stores=[], categories=[], products=[], cart=[], filterCat="all";
   const storeId=()=>$("storeSel").value||null;
@@ -271,8 +280,12 @@
   };
   $("logoutBtn").onclick=async()=>{await sb.auth.signOut(); render();};
 
-  $("tabSell").onclick=()=>switchTab("sell"); $("tabMenu").onclick=()=>switchTab("menu");
-  function switchTab(tab){ $("tabSell").classList.toggle("on",tab==="sell"); $("tabMenu").classList.toggle("on",tab==="menu"); $("sellTab").classList.toggle("hidden",tab!=="sell"); $("menuTab").classList.toggle("hidden",tab!=="menu"); }
+  $("tabSell").onclick=()=>switchTab("sell"); $("tabOrders").onclick=()=>switchTab("orders"); $("tabMenu").onclick=()=>switchTab("menu");
+  function switchTab(tab){
+    $("tabSell").classList.toggle("on",tab==="sell"); $("tabOrders").classList.toggle("on",tab==="orders"); $("tabMenu").classList.toggle("on",tab==="menu");
+    $("sellTab").classList.toggle("hidden",tab!=="sell"); $("ordersTab").classList.toggle("hidden",tab!=="orders"); $("menuTab").classList.toggle("hidden",tab!=="menu");
+    if(tab==="orders")loadOrders();
+  }
 
   async function loadStores(){
     const {data,error}=await sb.from("stores").select("*").order("created_at");
@@ -362,6 +375,32 @@
     if(error)return;
     const sum=(data||[]).reduce((s,o)=>s+Number(o.total),0);
     $("today").innerHTML=`${t("today")}: <b>${money(sum)}</b> · ${(data||[]).length} ${t("orders_unit")}`;
+  }
+
+  async function loadOrders(){
+    const sid=storeId(); const list=$("ordersList"); if(!sid){ list.innerHTML=""; return; }
+    const {data,error}=await sb.from("orders").select("*, order_items(*)").eq("store_id",sid).order("created_at",{ascending:false}).limit(50);
+    if(error){ list.innerHTML=`<div class="empty">${esc(error.message)}</div>`; return; }
+    if(!data||!data.length){ list.innerHTML=`<div class="empty">${t("no_orders")}</div>`; return; }
+    const store=stores.find(s=>s.id===sid)||{};
+    list.innerHTML=data.map(o=>{
+      const time=new Date(o.created_at).toLocaleString();
+      const n=(o.order_items||[]).reduce((s,i)=>s+Number(i.qty),0);
+      const lines=(o.order_items||[]).map(i=>`<div class="rline"><span>${esc(i.name)} ×${i.qty}</span><span>${money(i.line_total)}</span></div>`).join("");
+      return `<div class="order">
+        <div class="ohead" data-o="${o.id}"><div><div class="nm">${money(o.total)}</div><div class="meta">${time} · ${n} ${t("items_word")}</div></div><span class="chev">▸</span></div>
+        <div class="odetail hidden" id="od-${o.id}"><div class="rcpt">
+          <div class="rtitle">${esc(store.company_name||store.name||"")}</div>
+          <div class="rmeta">${time}</div>
+          ${lines}
+          <div class="rline rtot"><span>${t("total")}</span><span>${money(o.total)}</span></div>
+          <div class="rline"><span>${t("paid_cash")}</span><span>${money(o.cash_received)}</span></div>
+          <div class="rline"><span>${t("change")}</span><span>${money(o.change_given)}</span></div>
+          <div class="rnote">${t("receipt_note")}</div>
+        </div></div>
+      </div>`;
+    }).join("");
+    list.querySelectorAll('.ohead').forEach(h=>h.onclick=()=>{ const d=$("od-"+h.dataset.o); d.classList.toggle("hidden"); h.querySelector('.chev').textContent=d.classList.contains("hidden")?"▸":"▾"; });
   }
 
   $("addCatBtn").onclick=async()=>{
