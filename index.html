@@ -45,8 +45,9 @@
   .who{font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .who b{color:var(--ink);font-weight:700}
   .seg{display:flex;background:#15151a;border:1px solid #2a2a32;border-radius:13px;padding:4px;margin:14px 0 2px}
-  .seg button{flex:1;padding:10px 3px;border-radius:10px;background:transparent;color:var(--muted);font-weight:700;font-size:14px}
+  .seg button{flex:1;padding:10px 2px;border-radius:10px;background:transparent;color:var(--muted);font-weight:700;font-size:13px}
   .seg button.on{background:linear-gradient(180deg,var(--gold),var(--gold2));color:#1a1a1e}
+  #pmChange{color:var(--ok)}
   .subseg{display:flex;gap:8px;margin:0 0 16px}
   .subseg button{flex:1;padding:9px;border-radius:10px;background:var(--soft);color:var(--muted);font-weight:700;font-size:14px}
   .subseg button.on{background:rgba(230,180,80,.16);color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}
@@ -153,7 +154,7 @@
   </div>
 
   <div class="card hidden" id="appView">
-    <div class="seg"><button id="tabSell" class="on" data-i18n="tab_sell">收银</button><button id="tabOrders" data-i18n="tab_orders">订单</button><button id="tabReport" data-i18n="tab_report">汇总</button><button id="tabMenu" data-i18n="tab_menu">菜单</button><button id="tabSettings" data-i18n="tab_settings">设置</button></div>
+    <div class="seg"><button id="tabSell" class="on" data-i18n="tab_sell">收银</button><button id="tabDine" data-i18n="tab_dine">点菜</button><button id="tabOrders" data-i18n="tab_orders">订单</button><button id="tabReport" data-i18n="tab_report">汇总</button><button id="tabMenu" data-i18n="tab_menu">菜单</button><button id="tabSettings" data-i18n="tab_settings">设置</button></div>
 
     <div id="sellTab">
       <div class="today" id="today"></div>
@@ -175,6 +176,26 @@
         <button class="btn ok" id="finishBtn" data-i18n="finish">完成收款</button>
         <button class="btn ghost" id="cancelCheckout" style="width:100%;margin-top:10px;text-align:center" data-i18n="cancel">取消</button>
         <div class="msg" id="payMsg"></div>
+      </div>
+    </div>
+
+    <div id="dineTab" class="hidden">
+      <div class="section-t" data-i18n="open_tables">开着的桌</div>
+      <div id="openTables"></div>
+      <div class="section-t" data-i18n="new_order">新点单</div>
+      <div id="addBanner" class="hidden" style="background:rgba(230,180,80,.16);color:var(--gold);font-weight:700;padding:10px 12px;border-radius:10px;margin-bottom:12px;font-size:14px"></div>
+      <div class="filter" id="catFilter2"></div>
+      <div class="grid-prod" id="prodGrid2"></div>
+      <div class="section-t" data-i18n="cart">购物车</div>
+      <div id="cart2"></div>
+      <div class="total-row"><span data-i18n="total">合计</span><b id="cartTotal2">€0.00</b></div>
+      <div id="dineActions">
+        <button class="btn" id="openTableBtn" disabled data-i18n="open_table_btn">开桌</button>
+        <button class="btn ghost" id="dineQuickBtn" disabled style="width:100%;margin-top:10px;text-align:center" data-i18n="pay_now_btn">直接收钱</button>
+      </div>
+      <div id="addActions" class="hidden">
+        <button class="btn" id="addToTableBtn" data-i18n="add_to_table">加到桌</button>
+        <button class="btn ghost" id="cancelAddBtn" style="width:100%;margin-top:10px;text-align:center" data-i18n="cancel_add">取消加菜</button>
       </div>
     </div>
 
@@ -271,6 +292,38 @@
   </div>
 </div>
 
+<div id="tblPickModal" class="modal hidden">
+  <div class="sheet">
+    <div class="sheet-h"><b data-i18n="choose_table">选桌号</b><span class="x" id="tpClose">✕</span></div>
+    <div class="chips" id="tblPickList" style="margin-top:6px"></div>
+  </div>
+</div>
+
+<div id="tblModal" class="modal hidden">
+  <div class="sheet">
+    <div class="sheet-h"><b id="tmTitle"></b><span class="x" id="tmClose">✕</span></div>
+    <div id="tmItems" style="margin-top:6px"></div>
+    <div class="total-row"><span data-i18n="total">合计</span><b id="tmTotal">€0.00</b></div>
+    <button class="btn" id="tmSettle" data-i18n="checkout">结账</button>
+    <button class="btn ghost" id="tmAdd" style="width:100%;margin-top:10px;text-align:center" data-i18n="add_items">加菜</button>
+  </div>
+</div>
+
+<div id="payModal" class="modal hidden">
+  <div class="sheet">
+    <div class="sheet-h"><b data-i18n="pay_method">付款方式</b><span class="x" id="pmClose">✕</span></div>
+    <div class="seg" style="margin-top:8px"><button id="pmCash" class="on" data-i18n="pay_cash">现金</button><button id="pmCard" data-i18n="pay_card">刷卡</button></div>
+    <div class="total-row"><span data-i18n="total">合计</span><b id="pmTotal">€0.00</b></div>
+    <div id="pmCashBox">
+      <label data-i18n="cash_received">收到现金 €</label>
+      <input id="pmCashInput" type="number" inputmode="decimal" step="0.01" placeholder="0.00" />
+      <div class="total-row"><span data-i18n="change">找零</span><b id="pmChange">€0.00</b></div>
+    </div>
+    <button class="btn ok" id="pmConfirm" data-i18n="finish">完成收款</button>
+    <div class="msg" id="pmMsg"></div>
+  </div>
+</div>
+
 <script>
   const I18N={
     cfg_warn:{zh:"还没读到 Supabase 配置。请确认 config.js 和 index.html 在同一文件夹并填了值。",en:"Supabase config not found. Make sure config.js is next to index.html and filled in.",it:"Configurazione Supabase non trovata."},
@@ -328,7 +381,12 @@
     tab_settings:{zh:"设置",en:"Settings",it:"Impostazioni"},mod_tab:{zh:"加料",en:"Add-ons",it:"Extra"},
     set_store:{zh:"店铺",en:"Shop",it:"Negozio"},set_notify:{zh:"通知",en:"Alerts",it:"Notifiche"},set_account:{zh:"账户",en:"Account",it:"Account"},
     set_tables:{zh:"桌位",en:"Tables",it:"Tavoli"},table_ph:{zh:"桌号,如 1 / 2 / 露台3",en:"Table no., e.g. 1 / 2 / Patio3",it:"Tavolo, es. 1 / 2 / Dehor3"},
-    no_tables:{zh:"还没有桌位",en:"No tables yet",it:"Nessun tavolo"},del_table:{zh:"删除这个桌位?",en:"Delete this table?",it:"Eliminare questo tavolo?"}
+    no_tables:{zh:"还没有桌位",en:"No tables yet",it:"Nessun tavolo"},del_table:{zh:"删除这个桌位?",en:"Delete this table?",it:"Eliminare questo tavolo?"},
+    tab_dine:{zh:"点菜",en:"Order",it:"Ordina"},open_tables:{zh:"开着的桌",en:"Open tables",it:"Tavoli aperti"},new_order:{zh:"新点单",en:"New order",it:"Nuovo ordine"},
+    open_table_btn:{zh:"开桌",en:"Open table",it:"Apri tavolo"},pay_now_btn:{zh:"直接收钱",en:"Pay now",it:"Paga subito"},choose_table:{zh:"选桌号",en:"Choose table",it:"Scegli tavolo"},
+    no_open_tables:{zh:"没有开着的桌",en:"No open tables",it:"Nessun tavolo aperto"},no_tables_set:{zh:"还没建桌位,去 设置→桌位",en:"No tables — add them in Settings→Tables",it:"Nessun tavolo — aggiungi in Impostazioni→Tavoli"},
+    table_word:{zh:"桌",en:"Table",it:"Tavolo"},add_items:{zh:"加菜",en:"Add items",it:"Aggiungi"},add_to_table:{zh:"加到桌",en:"Add to table",it:"Aggiungi al tavolo"},cancel_add:{zh:"取消加菜",en:"Cancel",it:"Annulla"},
+    adding_to:{zh:"正在加菜:",en:"Adding to: ",it:"Aggiungi a: "}
   };
 
   const $=(id)=>document.getElementById(id);
@@ -374,14 +432,15 @@
   };
   $("logoutBtn").onclick=async()=>{await sb.auth.signOut(); render();};
 
-  $("tabSell").onclick=()=>switchTab("sell"); $("tabOrders").onclick=()=>switchTab("orders"); $("tabMenu").onclick=()=>switchTab("menu"); $("tabReport").onclick=()=>switchTab("report"); $("tabSettings").onclick=()=>switchTab("settings");
+  $("tabSell").onclick=()=>switchTab("sell"); $("tabDine").onclick=()=>switchTab("dine"); $("tabOrders").onclick=()=>switchTab("orders"); $("tabMenu").onclick=()=>switchTab("menu"); $("tabReport").onclick=()=>switchTab("report"); $("tabSettings").onclick=()=>switchTab("settings");
   function switchTab(tab){
-    const tabs={sell:"tabSell",orders:"tabOrders",report:"tabReport",menu:"tabMenu",settings:"tabSettings"};
-    const panes={sell:"sellTab",orders:"ordersTab",report:"reportTab",menu:"menuTab",settings:"settingsTab"};
+    const tabs={sell:"tabSell",dine:"tabDine",orders:"tabOrders",report:"tabReport",menu:"tabMenu",settings:"tabSettings"};
+    const panes={sell:"sellTab",dine:"dineTab",orders:"ordersTab",report:"reportTab",menu:"menuTab",settings:"settingsTab"};
     for(const k in tabs)$(tabs[k]).classList.toggle("on",k===tab);
     for(const k in panes)$(panes[k]).classList.toggle("hidden",k!==tab);
     if(tab==="orders")loadOrders();
     if(tab==="report")loadReport();
+    if(tab==="dine"){ renderFilter(); renderGrid(); renderCart(); loadOpenTables(); }
   }
   function showMenuSub(w){
     $("smCat").classList.toggle("on",w==="cat"); $("smProd").classList.toggle("on",w==="prod"); $("smMod").classList.toggle("on",w==="mod");
@@ -415,11 +474,8 @@
     renderFilter();
   }
   function renderFilter(){
-    const f=$("catFilter"); if(!f)return;
-    let html=`<span class="fchip ${filterCat==='all'?'on':''}" data-f="all">${t("all")}</span>`;
-    html+=categories.map(c=>`<span class="fchip ${filterCat===c.id?'on':''}" data-f="${c.id}">${esc(c.name)}</span>`).join("");
-    f.innerHTML=html;
-    f.querySelectorAll('.fchip').forEach(ch=>ch.onclick=()=>{filterCat=ch.dataset.f; renderFilter(); renderGrid();});
+    const html=`<span class="fchip ${filterCat==='all'?'on':''}" data-f="all">${t("all")}</span>`+categories.map(c=>`<span class="fchip ${filterCat===c.id?'on':''}" data-f="${c.id}">${esc(c.name)}</span>`).join("");
+    ["catFilter","catFilter2"].forEach(idn=>{ const f=$(idn); if(!f)return; f.innerHTML=html; f.querySelectorAll('.fchip').forEach(ch=>ch.onclick=()=>{filterCat=ch.dataset.f; renderFilter(); renderGrid();}); });
   }
 
   async function loadGroups(){
@@ -487,12 +543,10 @@
     await loadPmg(); loadProducts();
   }
   function renderGrid(){
-    const g=$("prodGrid");
     let ps=products.filter(p=>p.active!==false);
     if(filterCat!=="all")ps=ps.filter(p=>p.category_id===filterCat);
-    if(!ps.length){ g.innerHTML=`<div class="empty" style="grid-column:1/-1">${t("no_prod_sell")}</div>`; return; }
-    g.innerHTML=ps.map(p=>`<button class="tile" data-id="${p.id}"><span class="tn">${esc(p.name)}</span><span class="tp">${money(p.price)}</span></button>`).join("");
-    g.querySelectorAll('.tile').forEach(el=>el.onclick=()=>tapProduct(el.dataset.id));
+    const html=ps.length?ps.map(p=>`<button class="tile" data-id="${p.id}"><span class="tn">${esc(p.name)}</span><span class="tp">${money(p.price)}</span></button>`).join(""):`<div class="empty" style="grid-column:1/-1">${t("no_prod_sell")}</div>`;
+    ["prodGrid","prodGrid2"].forEach(idn=>{ const g=$(idn); if(!g)return; g.innerHTML=html; g.querySelectorAll('.tile').forEach(el=>el.onclick=()=>tapProduct(el.dataset.id)); });
   }
 
   function tapProduct(pid){ const p=products.find(x=>x.id===pid); if(!p)return; const gs=groupsForProduct(pid); if(gs.length) openOptions(p,gs); else addLine({key:p.id,product_id:p.id,name:p.name,price:Number(p.price),qty:1,options_text:null}); }
@@ -529,16 +583,15 @@
   function changeQty(key,dq){ const l=cart.find(x=>x.key===key); if(!l)return; l.qty+=dq; if(l.qty<=0)cart=cart.filter(x=>x!==l); renderCart(); }
   function cartTotal(){ return cart.reduce((s,l)=>s+l.price*l.qty,0); }
   function renderCart(){
-    const c=$("cart"); if(!c)return;
-    if(!cart.length){ c.innerHTML=`<div class="empty">${t("cart_empty")}</div>`; }
-    else{
-      c.innerHTML=cart.map(l=>`<div class="cart-line"><div class="cn"><div>${esc(l.name)}</div>${l.options_text?`<div class="copt">${esc(l.options_text)}</div>`:""}</div><span class="stepper"><button data-m="${l.key}">−</button><span class="q">${l.qty}</span><button data-p="${l.key}">+</button></span><span class="lt">${money(l.price*l.qty)}</span></div>`).join("");
-      c.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>changeQty(b.dataset.m,-1));
-      c.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>changeQty(b.dataset.p,1));
-    }
-    $("cartTotal").textContent=money(cartTotal());
-    $("checkoutBtn").disabled=cart.length===0;
-    if(cart.length===0)$("checkoutPanel").classList.add("hidden");
+    const html = cart.length ? cart.map(l=>`<div class="cart-line"><div class="cn"><div>${esc(l.name)}</div>${l.options_text?`<div class="copt">${esc(l.options_text)}</div>`:""}</div><span class="stepper"><button data-m="${l.key}">−</button><span class="q">${l.qty}</span><button data-p="${l.key}">+</button></span><span class="lt">${money(l.price*l.qty)}</span></div>`).join("") : `<div class="empty">${t("cart_empty")}</div>`;
+    ["cart","cart2"].forEach(idn=>{ const c=$(idn); if(!c)return; c.innerHTML=html; c.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>changeQty(b.dataset.m,-1)); c.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>changeQty(b.dataset.p,1)); });
+    const tot=money(cartTotal()); if($("cartTotal"))$("cartTotal").textContent=tot; if($("cartTotal2"))$("cartTotal2").textContent=tot;
+    const empty=cart.length===0;
+    if($("checkoutBtn"))$("checkoutBtn").disabled=empty;
+    if($("openTableBtn"))$("openTableBtn").disabled=empty;
+    if($("dineQuickBtn"))$("dineQuickBtn").disabled=empty;
+    if($("addToTableBtn"))$("addToTableBtn").disabled=empty;
+    if(empty&&$("checkoutPanel"))$("checkoutPanel").classList.add("hidden");
   }
 
   let payMethod="cash";
@@ -701,6 +754,96 @@
     const {error}=await sb.from("audit_log").insert({store_id:sid,action:t("test_action"),detail:t("test_detail")});
     if(error){show($("notifyMsg"),t("fail")+error.message,"err");return;}
     show($("notifyMsg"),t("test_sent"),"ok");
+  };
+
+  let openOrders=[], curOpen=null, addingToOrder=null, payCtx=null, pmMethod2="cash";
+  async function loadOpenTables(){
+    const sid=storeId(); const el=$("openTables"); if(!sid){ openOrders=[]; if(el)el.innerHTML=""; return; }
+    const {data,error}=await sb.from("orders").select("*, order_items(*), tables(name)").eq("store_id",sid).eq("status","open").order("created_at");
+    if(error){ el.innerHTML=`<div class="empty">${esc(error.message)}</div>`; return; }
+    openOrders=data||[];
+    if(!openOrders.length){ el.innerHTML=`<div class="empty">${t("no_open_tables")}</div>`; return; }
+    el.innerHTML=openOrders.map(o=>{
+      const tot=(o.order_items||[]).reduce((s,i)=>s+Number(i.line_total),0);
+      const n=(o.order_items||[]).reduce((s,i)=>s+Number(i.qty),0);
+      const tname=o.tables?o.tables.name:"—";
+      return `<div class="order"><div class="ohead" data-open="${o.id}"><div><div class="nm">${t("table_word")} ${esc(tname)}</div><div class="meta">${money(tot)} · ${n} ${t("items_word")}</div></div><span class="chev">▸</span></div></div>`;
+    }).join("");
+    el.querySelectorAll('[data-open]').forEach(h=>h.onclick=()=>openTableDetail(h.dataset.open));
+  }
+  function orderTotal(o){ return (o.order_items||[]).reduce((s,i)=>s+Number(i.line_total),0); }
+  function openTableDetail(id){
+    const o=openOrders.find(x=>x.id===id); if(!o)return; curOpen=o;
+    $("tmTitle").textContent=t("table_word")+" "+(o.tables?o.tables.name:"—");
+    $("tmItems").innerHTML=(o.order_items||[]).map(i=>`<div class="rline"><span>${esc(i.name)}${i.options_text?` (${esc(i.options_text)})`:""} ×${i.qty}</span><span>${money(i.line_total)}</span></div>`).join("")||`<div class="empty">—</div>`;
+    $("tmTotal").textContent=money(orderTotal(o));
+    $("tblModal").classList.remove("hidden");
+  }
+  $("tmClose").onclick=()=>$("tblModal").classList.add("hidden");
+  $("tmSettle").onclick=()=>{ $("tblModal").classList.add("hidden"); openPay({kind:"settle",orderId:curOpen.id,total:orderTotal(curOpen)}); };
+  $("tmAdd").onclick=()=>{ $("tblModal").classList.add("hidden"); enterAddMode(curOpen); };
+
+  function enterAddMode(o){
+    addingToOrder=o; cart=[]; renderCart();
+    $("addBanner").classList.remove("hidden"); $("addBanner").textContent=t("adding_to")+" "+t("table_word")+" "+(o.tables?o.tables.name:"—");
+    $("dineActions").classList.add("hidden"); $("addActions").classList.remove("hidden");
+    $("addToTableBtn").textContent=t("add_to_table")+" "+(o.tables?o.tables.name:"—");
+  }
+  function exitAddMode(){ addingToOrder=null; $("addBanner").classList.add("hidden"); $("dineActions").classList.remove("hidden"); $("addActions").classList.add("hidden"); }
+  $("cancelAddBtn").onclick=()=>{ cart=[]; renderCart(); exitAddMode(); };
+  $("addToTableBtn").onclick=async()=>{
+    if(!addingToOrder||!cart.length)return;
+    const b=$("addToTableBtn"); b.disabled=true;
+    const items=cart.map(l=>({order_id:addingToOrder.id,product_id:l.product_id,name:l.name,price:l.price,qty:l.qty,line_total:+(l.price*l.qty).toFixed(2),options_text:l.options_text||null}));
+    const {error}=await sb.from("order_items").insert(items);
+    if(error){ b.disabled=false; alert(t("fail")+error.message); return; }
+    const newTotal=Number(addingToOrder.total||0)+cart.reduce((s,l)=>s+l.price*l.qty,0);
+    await sb.from("orders").update({total:+newTotal.toFixed(2)}).eq("id",addingToOrder.id);
+    b.disabled=false; cart=[]; renderCart(); exitAddMode(); loadOpenTables();
+  };
+
+  $("openTableBtn").onclick=()=>{
+    if(!cart.length)return;
+    if(!tables.length){ alert(t("no_tables_set")); return; }
+    $("tblPickList").innerHTML=tables.map(tb=>`<span class="fchip" data-pick="${tb.id}">${esc(tb.name)}</span>`).join("");
+    $("tblPickList").querySelectorAll('[data-pick]').forEach(c=>c.onclick=()=>openTableWith(c.dataset.pick));
+    $("tblPickModal").classList.remove("hidden");
+  };
+  $("tpClose").onclick=()=>$("tblPickModal").classList.add("hidden");
+  async function openTableWith(tableId){
+    const total=cartTotal();
+    const {data:order,error}=await sb.from("orders").insert({store_id:storeId(),order_type:"dine",status:"open",table_id:tableId,total:+total.toFixed(2)}).select().single();
+    if(error){ alert(t("fail")+error.message); return; }
+    const items=cart.map(l=>({order_id:order.id,product_id:l.product_id,name:l.name,price:l.price,qty:l.qty,line_total:+(l.price*l.qty).toFixed(2),options_text:l.options_text||null}));
+    const {error:e2}=await sb.from("order_items").insert(items);
+    if(e2){ alert(t("fail")+e2.message); return; }
+    cart=[]; renderCart(); $("tblPickModal").classList.add("hidden"); loadOpenTables();
+  }
+  $("dineQuickBtn").onclick=()=>{ if(!cart.length)return; openPay({kind:"newQuick",total:cartTotal()}); };
+
+  function setPm(m){ pmMethod2=m; $("pmCash").classList.toggle("on",m==="cash"); $("pmCard").classList.toggle("on",m==="card"); $("pmCashBox").classList.toggle("hidden",m!=="cash"); }
+  $("pmCash").onclick=()=>setPm("cash"); $("pmCard").onclick=()=>setPm("card");
+  $("pmClose").onclick=()=>$("payModal").classList.add("hidden");
+  $("payModal").onclick=(e)=>{ if(e.target===$("payModal"))$("payModal").classList.add("hidden"); };
+  $("tblModal").onclick=(e)=>{ if(e.target===$("tblModal"))$("tblModal").classList.add("hidden"); };
+  $("tblPickModal").onclick=(e)=>{ if(e.target===$("tblPickModal"))$("tblPickModal").classList.add("hidden"); };
+  $("pmCashInput").oninput=()=>{ const ch=parseFloat($("pmCashInput").value)-payCtx.total; $("pmChange").textContent=money(isNaN(ch)?0:Math.max(0,ch)); };
+  function openPay(ctx){ payCtx=ctx; setPm("cash"); $("pmTotal").textContent=money(ctx.total); $("pmCashInput").value=""; $("pmChange").textContent=money(0); hide($("pmMsg")); $("payModal").classList.remove("hidden"); }
+  $("pmConfirm").onclick=async()=>{
+    hide($("pmMsg")); const total=payCtx.total; let cash=null,change=null;
+    if(pmMethod2==="cash"){ cash=parseFloat($("pmCashInput").value); if(isNaN(cash)||cash<total){ show($("pmMsg"),t("cash_short",{t:money(total)}),"err"); return; } change=+(cash-total).toFixed(2); }
+    const b=$("pmConfirm"); b.disabled=true; b.textContent=t("saving"); let err;
+    if(payCtx.kind==="settle"){
+      const r=await sb.from("orders").update({payment_method:pmMethod2,cash_received:cash,change_given:change,status:"completed",total:+total.toFixed(2)}).eq("id",payCtx.orderId); err=r.error;
+    } else {
+      const {data:order,error}=await sb.from("orders").insert({store_id:storeId(),order_type:"quick",status:"completed",total:+total.toFixed(2),payment_method:pmMethod2,cash_received:cash,change_given:change}).select().single();
+      if(error){ err=error; } else { const items=cart.map(l=>({order_id:order.id,product_id:l.product_id,name:l.name,price:l.price,qty:l.qty,line_total:+(l.price*l.qty).toFixed(2),options_text:l.options_text||null})); const r2=await sb.from("order_items").insert(items); err=r2.error; }
+    }
+    b.disabled=false; b.textContent=t("finish");
+    if(err){ show($("pmMsg"),t("fail")+err.message,"err"); return; }
+    $("payModal").classList.add("hidden");
+    if(payCtx.kind!=="settle"){ cart=[]; renderCart(); }
+    loadOpenTables(); loadToday();
   };
 
   render();
