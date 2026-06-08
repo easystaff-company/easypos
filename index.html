@@ -108,6 +108,15 @@
   summary{color:var(--gold);font-size:14px;font-weight:700;cursor:pointer;padding:8px 0;list-style:none}
   summary::-webkit-details-marker{display:none}
   .cfgwarn{background:rgba(255,90,77,.16);color:var(--err);padding:14px;border-radius:12px;font-size:14px;line-height:1.5}
+  .rsum{background:var(--soft);border-radius:14px;padding:16px}
+  .rsum .big{font-size:30px;font-weight:800;color:var(--gold)}
+  .rsum .big span{font-size:15px;color:var(--muted);font-weight:600;margin-left:8px}
+  .rsum .split{display:flex;gap:10px;margin-top:12px}
+  .rsum .cell{flex:1;background:#15151a;border-radius:11px;padding:11px 12px}
+  .rsum .cell .k{font-size:12px;color:var(--muted);font-weight:700}
+  .rsum .cell .v{font-size:18px;font-weight:800;margin-top:2px}
+  .rsum .avg{margin-top:12px;font-size:14px;color:var(--muted);font-weight:600}
+  .rsum .avg b{color:var(--ink)}
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center;z-index:50}
   .sheet{background:var(--card);width:100%;max-width:480px;border-radius:20px 20px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom));max-height:86vh;overflow:auto}
   .sheet-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
@@ -141,7 +150,7 @@
   <div class="card hidden" id="appView">
     <div class="top"><div class="who"><span data-i18n="account">账户:</span><b id="userEmail">—</b></div><button class="btn ghost" id="logoutBtn" data-i18n="logout">退出</button></div>
     <label data-i18n="cur_store">当前店铺</label><select id="storeSel"></select>
-    <div class="seg"><button id="tabSell" class="on" data-i18n="tab_sell">收银</button><button id="tabOrders" data-i18n="tab_orders">订单</button><button id="tabMenu" data-i18n="tab_menu">菜单</button></div>
+    <div class="seg"><button id="tabSell" class="on" data-i18n="tab_sell">收银</button><button id="tabOrders" data-i18n="tab_orders">订单</button><button id="tabMenu" data-i18n="tab_menu">菜单</button><button id="tabReport" data-i18n="tab_report">汇总</button></div>
 
     <div id="sellTab">
       <div class="today" id="today"></div>
@@ -204,6 +213,28 @@
         <button class="btn" id="addStoreBtn" data-i18n="add_store">添加店铺</button>
         <div class="msg" id="storeMsg"></div>
       </details>
+
+      <details>
+        <summary data-i18n="notify_settings">通知设置 (Telegram)</summary>
+        <label data-i18n="nt_token">Bot Token</label><input id="ntToken" placeholder="123456:ABC..." />
+        <label data-i18n="nt_chat">Chat ID</label><input id="ntChat" placeholder="123456789" />
+        <label class="chkrow" style="margin-top:12px"><input type="checkbox" id="ntEnabled" checked /> <span data-i18n="nt_enabled">开启通知</span></label>
+        <button class="btn" id="saveNotifyBtn" data-i18n="save_btn">保存</button>
+        <button class="btn ghost" id="testNotifyBtn" style="width:100%;margin-top:10px;text-align:center" data-i18n="test_notify">发送测试通知</button>
+        <div class="msg" id="notifyMsg"></div>
+      </details>
+    </div>
+
+    <div id="reportTab" class="hidden">
+      <div class="row-add" style="align-items:center;gap:8px;margin-top:6px">
+        <input type="date" id="repDate" />
+        <button class="btn sm" id="repToday" data-i18n="today_btn">今天</button>
+      </div>
+      <div id="repSummary" style="margin-top:14px"></div>
+      <div class="section-t" data-i18n="item_sales">菜品销量</div>
+      <div id="repItems"></div>
+      <button class="btn" id="repExportOrders" data-i18n="export_orders">导出订单 CSV</button>
+      <button class="btn ghost" id="repExportItems" style="width:100%;margin-top:10px;text-align:center" data-i18n="export_items">导出菜品汇总 CSV</button>
     </div>
   </div>
 </div>
@@ -260,7 +291,18 @@
     opt_name_ph:{zh:"选项名",en:"Option",it:"Opzione"},opt_price_ph:{zh:"加价",en:"+Price",it:"+Prezzo"},add_group:{zh:"加选项组",en:"Add group",it:"Aggiungi gruppo"},
     attach_groups:{zh:"适用选项组",en:"Option groups",it:"Gruppi opzioni"},no_groups:{zh:"还没有选项组(在上面建)",en:"No option groups yet",it:"Nessun gruppo"},
     add_to_cart:{zh:"加入购物车",en:"Add to cart",it:"Aggiungi"},pick_required:{zh:"请先选必选项",en:"Select required options",it:"Seleziona le opzioni obbligatorie"},
-    del_group:{zh:"删除选项组?(挂在菜品上的也会取消)",en:"Delete group? (also detaches from products)",it:"Eliminare il gruppo?"}
+    del_group:{zh:"删除选项组?(挂在菜品上的也会取消)",en:"Delete group? (also detaches from products)",it:"Eliminare il gruppo?"},
+    tab_report:{zh:"汇总",en:"Report",it:"Riepilogo"},today_btn:{zh:"今天",en:"Today",it:"Oggi"},
+    revenue:{zh:"营业额",en:"Revenue",it:"Incasso"},avg_order:{zh:"客单价",en:"Avg order",it:"Scontrino medio"},
+    item_sales:{zh:"菜品销量",en:"Item sales",it:"Vendite prodotti"},qty:{zh:"数量",en:"Qty",it:"Q.tà"},
+    rep_date:{zh:"日期时间",en:"Date/time",it:"Data/ora"},no_data:{zh:"这天没有订单",en:"No orders this day",it:"Nessun ordine in questa data"},
+    export_orders:{zh:"导出订单 CSV",en:"Export orders CSV",it:"Esporta ordini CSV"},export_items:{zh:"导出菜品汇总 CSV",en:"Export items CSV",it:"Esporta prodotti CSV"},
+    notify_settings:{zh:"通知设置 (Telegram)",en:"Notifications (Telegram)",it:"Notifiche (Telegram)"},
+    nt_token:{zh:"Bot Token",en:"Bot Token",it:"Bot Token"},nt_chat:{zh:"Chat ID",en:"Chat ID",it:"Chat ID"},
+    nt_enabled:{zh:"开启通知",en:"Enable notifications",it:"Attiva notifiche"},save_btn:{zh:"保存",en:"Save",it:"Salva"},
+    saved_ok:{zh:"已保存 ✓",en:"Saved ✓",it:"Salvato ✓"},test_notify:{zh:"发送测试通知",en:"Send test notification",it:"Invia notifica di prova"},
+    test_sent:{zh:"已发送,去 Telegram 看看 ✓",en:"Sent — check Telegram ✓",it:"Inviato — controlla Telegram ✓"},
+    test_action:{zh:"测试通知",en:"Test notification",it:"Notifica di prova"},test_detail:{zh:"这是一条来自 easypos 的测试消息",en:"Test message from easypos",it:"Messaggio di prova da easypos"}
   };
 
   const $=(id)=>document.getElementById(id);
@@ -295,7 +337,7 @@
 
   async function render(){
     const {data:{session}}=await sb.auth.getSession();
-    if(session){ $("loginView").classList.add("hidden"); $("appView").classList.remove("hidden"); $("userEmail").textContent=session.user.email; await loadStores(); }
+    if(session){ $("loginView").classList.add("hidden"); $("appView").classList.remove("hidden"); $("userEmail").textContent=session.user.email; await loadStores(); loadNotifyConfig(); }
     else { $("appView").classList.add("hidden"); $("loginView").classList.remove("hidden"); }
   }
   $("loginBtn").onclick=async()=>{
@@ -306,11 +348,12 @@
   };
   $("logoutBtn").onclick=async()=>{await sb.auth.signOut(); render();};
 
-  $("tabSell").onclick=()=>switchTab("sell"); $("tabOrders").onclick=()=>switchTab("orders"); $("tabMenu").onclick=()=>switchTab("menu");
+  $("tabSell").onclick=()=>switchTab("sell"); $("tabOrders").onclick=()=>switchTab("orders"); $("tabMenu").onclick=()=>switchTab("menu"); $("tabReport").onclick=()=>switchTab("report");
   function switchTab(tab){
-    $("tabSell").classList.toggle("on",tab==="sell"); $("tabOrders").classList.toggle("on",tab==="orders"); $("tabMenu").classList.toggle("on",tab==="menu");
-    $("sellTab").classList.toggle("hidden",tab!=="sell"); $("ordersTab").classList.toggle("hidden",tab!=="orders"); $("menuTab").classList.toggle("hidden",tab!=="menu");
+    $("tabSell").classList.toggle("on",tab==="sell"); $("tabOrders").classList.toggle("on",tab==="orders"); $("tabMenu").classList.toggle("on",tab==="menu"); $("tabReport").classList.toggle("on",tab==="report");
+    $("sellTab").classList.toggle("hidden",tab!=="sell"); $("ordersTab").classList.toggle("hidden",tab!=="orders"); $("menuTab").classList.toggle("hidden",tab!=="menu"); $("reportTab").classList.toggle("hidden",tab!=="report");
     if(tab==="orders")loadOrders();
+    if(tab==="report")loadReport();
   }
 
   async function loadStores(){
@@ -538,6 +581,73 @@
     b.disabled=false; b.textContent=t("add_store");
     if(error){show($("storeMsg"),t("fail")+error.message,"err");return;}
     show($("storeMsg"),t("added"),"ok"); $("storeName").value=$("storeCompany").value=$("storeAddr").value=$("storeVat").value=""; loadStores();
+  };
+
+  function setRepToday(){ const d=new Date(); $("repDate").value=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+  let reportRows=[], reportItems=[];
+  async function loadReport(){
+    const sid=storeId();
+    if(!$("repDate").value)setRepToday();
+    if(!sid){ $("repSummary").innerHTML=`<div class="empty">${t("need_store")}</div>`; $("repItems").innerHTML=""; reportRows=[];reportItems=[]; return; }
+    const ds=$("repDate").value.split("-").map(Number);
+    const start=new Date(ds[0],ds[1]-1,ds[2],0,0,0,0), end=new Date(ds[0],ds[1]-1,ds[2]+1,0,0,0,0);
+    const {data,error}=await sb.from("orders").select("*, order_items(*)").eq("store_id",sid).gte("created_at",start.toISOString()).lt("created_at",end.toISOString()).order("created_at");
+    if(error){ $("repSummary").innerHTML=`<div class="empty">${esc(error.message)}</div>`; $("repItems").innerHTML=""; return; }
+    const orders=data||[]; reportRows=orders;
+    let total=0,cashAmt=0,cashN=0,cardAmt=0,cardN=0; const itemMap={};
+    orders.forEach(o=>{
+      total+=Number(o.total);
+      if(o.payment_method==="card"){cardAmt+=Number(o.total);cardN++;} else {cashAmt+=Number(o.total);cashN++;}
+      (o.order_items||[]).forEach(i=>{ const key=i.name+(i.options_text?(" · "+i.options_text):""); if(!itemMap[key])itemMap[key]={name:key,qty:0,rev:0}; itemMap[key].qty+=Number(i.qty); itemMap[key].rev+=Number(i.line_total); });
+    });
+    const n=orders.length, avg=n?total/n:0;
+    reportItems=Object.values(itemMap).sort((a,b)=>b.rev-a.rev);
+    $("repSummary").innerHTML=`<div class="rsum"><div class="big">${money(total)} <span>${n} ${t("orders_unit")}</span></div>
+      <div class="split"><div class="cell"><div class="k">${t("pay_cash")}</div><div class="v">${money(cashAmt)}</div><div class="k">${cashN} ${t("orders_unit")}</div></div>
+      <div class="cell"><div class="k">${t("pay_card")}</div><div class="v">${money(cardAmt)}</div><div class="k">${cardN} ${t("orders_unit")}</div></div></div>
+      <div class="avg">${t("avg_order")}: <b>${money(avg)}</b></div></div>`;
+    $("repItems").innerHTML=reportItems.length?reportItems.map(it=>`<div class="item"><div class="iteminfo"><div class="nm">${esc(it.name)}</div><div class="meta">×${it.qty}</div></div><div class="pr">${money(it.rev)}</div></div>`).join(""):`<div class="empty">${t("no_data")}</div>`;
+  }
+  $("repToday").onclick=()=>{ setRepToday(); loadReport(); };
+  $("repDate").onchange=loadReport;
+  function csvCell(v){ v=String(v==null?"":v); return /[";\r\n]/.test(v)?('"'+v.replace(/"/g,'""')+'"'):v; }
+  function toCSV(rows){ return "\uFEFF"+rows.map(r=>r.map(csvCell).join(";")).join("\r\n"); }
+  function amtIt(n){ return Number(n||0).toFixed(2).replace(".",","); }
+  async function shareCSV(name,csv){
+    const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
+    try{ const file=new File([blob],name,{type:"text/csv"}); if(navigator.canShare&&navigator.canShare({files:[file]})){ await navigator.share({files:[file],title:name}); return; } }catch(e){ if(e&&e.name==="AbortError")return; }
+    const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),1500);
+  }
+  $("repExportOrders").onclick=()=>{
+    const rows=[[t("rep_date"),t("total"),t("pay_method"),t("paid_cash"),t("change")]];
+    reportRows.forEach(o=>rows.push([new Date(o.created_at).toLocaleString(), amtIt(o.total), o.payment_method==="card"?t("pay_card"):t("pay_cash"), o.payment_method==="cash"?amtIt(o.cash_received):"", o.payment_method==="cash"?amtIt(o.change_given):""]));
+    shareCSV("easypos_orders_"+$("repDate").value+".csv", toCSV(rows));
+  };
+  $("repExportItems").onclick=()=>{
+    const rows=[[t("name"),t("qty"),t("total")]];
+    reportItems.forEach(it=>rows.push([it.name, it.qty, amtIt(it.rev)]));
+    shareCSV("easypos_items_"+$("repDate").value+".csv", toCSV(rows));
+  };
+
+  async function loadNotifyConfig(){
+    const {data:{user}}=await sb.auth.getUser(); if(!user)return;
+    const {data}=await sb.from("notify_config").select("*").eq("boss_id",user.id).maybeSingle();
+    if(data){ $("ntToken").value=data.telegram_token||""; $("ntChat").value=data.telegram_chat_id||""; $("ntEnabled").checked=!!data.notify_enabled; }
+  }
+  $("saveNotifyBtn").onclick=async()=>{
+    hide($("notifyMsg")); const {data:{user}}=await sb.auth.getUser();
+    const b=$("saveNotifyBtn"); b.disabled=true; b.textContent=t("adding");
+    const {error}=await sb.from("notify_config").upsert({boss_id:user.id,telegram_token:$("ntToken").value.trim()||null,telegram_chat_id:$("ntChat").value.trim()||null,notify_enabled:$("ntEnabled").checked,updated_at:new Date().toISOString()});
+    b.disabled=false; b.textContent=t("save_btn");
+    if(error){show($("notifyMsg"),t("fail")+error.message,"err");return;}
+    show($("notifyMsg"),t("saved_ok"),"ok");
+  };
+  $("testNotifyBtn").onclick=async()=>{
+    hide($("notifyMsg")); const sid=storeId();
+    if(!sid){show($("notifyMsg"),t("need_store"),"err");return;}
+    const {error}=await sb.from("audit_log").insert({store_id:sid,action:t("test_action"),detail:t("test_detail")});
+    if(error){show($("notifyMsg"),t("fail")+error.message,"err");return;}
+    show($("notifyMsg"),t("test_sent"),"ok");
   };
 
   render();
