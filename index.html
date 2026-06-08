@@ -48,6 +48,10 @@
   .seg button{flex:1;padding:10px 2px;border-radius:10px;background:transparent;color:var(--muted);font-weight:700;font-size:13px}
   .seg button.on{background:linear-gradient(180deg,var(--gold),var(--gold2));color:#1a1a1e}
   #pmChange{color:var(--ok)}
+  .dropdown{position:absolute;top:calc(100% + 6px);right:4px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px;box-shadow:0 14px 34px rgba(0,0,0,.55);z-index:40;min-width:150px;display:flex;flex-direction:column;gap:4px}
+  .dropdown button{text-align:left;background:transparent;color:var(--ink);font-weight:700;font-size:15px;padding:12px;border-radius:9px}
+  .dropdown button:active{background:var(--soft)}
+  .dropdown button.on{color:var(--gold);background:rgba(230,180,80,.12)}
   .subseg{display:flex;gap:8px;margin:0 0 16px}
   .subseg button{flex:1;padding:9px;border-radius:10px;background:var(--soft);color:var(--muted);font-weight:700;font-size:14px}
   .subseg button.on{background:rgba(230,180,80,.16);color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}
@@ -154,7 +158,7 @@
   </div>
 
   <div class="card hidden" id="appView">
-    <div class="seg"><button id="tabSell" class="on" data-i18n="tab_sell">收银</button><button id="tabDine" data-i18n="tab_dine">点菜</button><button id="tabOrders" data-i18n="tab_orders">订单</button><button id="tabReport" data-i18n="tab_report">汇总</button><button id="tabMenu" data-i18n="tab_menu">菜单</button><button id="tabSettings" data-i18n="tab_settings">设置</button></div>
+    <div class="seg" style="position:relative"><button id="tabSell" class="on" data-i18n="tab_sell">收银</button><button id="tabDine" data-i18n="tab_dine">点菜</button><button id="tabOrders" data-i18n="tab_orders">订单</button><button id="moreBtn"><span data-i18n="more">更多</span> ▾</button><div id="moreMenu" class="dropdown hidden"><button data-go="report" data-i18n="tab_report">汇总</button><button data-go="menu" data-i18n="tab_menu">菜单</button><button data-go="settings" data-i18n="tab_settings">设置</button></div></div>
 
     <div id="sellTab">
       <div class="today" id="today"></div>
@@ -386,7 +390,8 @@
     open_table_btn:{zh:"开桌",en:"Open table",it:"Apri tavolo"},pay_now_btn:{zh:"直接收钱",en:"Pay now",it:"Paga subito"},choose_table:{zh:"选桌号",en:"Choose table",it:"Scegli tavolo"},
     no_open_tables:{zh:"没有开着的桌",en:"No open tables",it:"Nessun tavolo aperto"},no_tables_set:{zh:"还没建桌位,去 设置→桌位",en:"No tables — add them in Settings→Tables",it:"Nessun tavolo — aggiungi in Impostazioni→Tavoli"},
     table_word:{zh:"桌",en:"Table",it:"Tavolo"},add_items:{zh:"加菜",en:"Add items",it:"Aggiungi"},add_to_table:{zh:"加到桌",en:"Add to table",it:"Aggiungi al tavolo"},cancel_add:{zh:"取消加菜",en:"Cancel",it:"Annulla"},
-    adding_to:{zh:"正在加菜:",en:"Adding to: ",it:"Aggiungi a: "}
+    adding_to:{zh:"正在加菜:",en:"Adding to: ",it:"Aggiungi a: "},
+    more:{zh:"更多",en:"More",it:"Altro"}
   };
 
   const $=(id)=>document.getElementById(id);
@@ -432,12 +437,17 @@
   };
   $("logoutBtn").onclick=async()=>{await sb.auth.signOut(); render();};
 
-  $("tabSell").onclick=()=>switchTab("sell"); $("tabDine").onclick=()=>switchTab("dine"); $("tabOrders").onclick=()=>switchTab("orders"); $("tabMenu").onclick=()=>switchTab("menu"); $("tabReport").onclick=()=>switchTab("report"); $("tabSettings").onclick=()=>switchTab("settings");
+  $("tabSell").onclick=()=>switchTab("sell"); $("tabDine").onclick=()=>switchTab("dine"); $("tabOrders").onclick=()=>switchTab("orders");
+  $("moreBtn").onclick=(e)=>{ e.stopPropagation(); $("moreMenu").classList.toggle("hidden"); };
+  $("moreMenu").querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>switchTab(b.dataset.go));
+  document.addEventListener('click',(e)=>{ if(!$("moreMenu").classList.contains("hidden") && !$("moreBtn").contains(e.target) && !e.target.closest('#moreMenu')) $("moreMenu").classList.add("hidden"); });
   function switchTab(tab){
-    const tabs={sell:"tabSell",dine:"tabDine",orders:"tabOrders",report:"tabReport",menu:"tabMenu",settings:"tabSettings"};
     const panes={sell:"sellTab",dine:"dineTab",orders:"ordersTab",report:"reportTab",menu:"menuTab",settings:"settingsTab"};
-    for(const k in tabs)$(tabs[k]).classList.toggle("on",k===tab);
     for(const k in panes)$(panes[k]).classList.toggle("hidden",k!==tab);
+    $("tabSell").classList.toggle("on",tab==="sell"); $("tabDine").classList.toggle("on",tab==="dine"); $("tabOrders").classList.toggle("on",tab==="orders");
+    $("moreBtn").classList.toggle("on",["report","menu","settings"].includes(tab));
+    $("moreMenu").querySelectorAll('[data-go]').forEach(b=>b.classList.toggle("on",b.dataset.go===tab));
+    $("moreMenu").classList.add("hidden");
     if(tab==="orders")loadOrders();
     if(tab==="report")loadReport();
     if(tab==="dine"){ renderFilter(); renderGrid(); renderCart(); loadOpenTables(); }
