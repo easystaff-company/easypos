@@ -4,33 +4,26 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#0d0d10" />
-<title>€asyPOS</title>
-<link rel="icon" type="image/svg+xml" href="favicon.svg" />
+<title>easypos</title>
+<link rel="icon" type="image/png" href="icon.png" />
+<link rel="apple-touch-icon" href="icon.png" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --bg:#0d0d10; --card:#1a1a1f; --soft:#23232a;
-    --ink:#f3f0e9; --muted:#8d8d96; --line:#2e2e36;
-    --gold:#e6b450; --gold2:#d89b2e; --ok:#34d164; --err:#ff5a4d; --r:16px;
-  }
+  :root{--bg:#0d0d10;--card:#1a1a1f;--soft:#23232a;--ink:#f3f0e9;--muted:#8d8d96;--line:#2e2e36;--gold:#e6b450;--gold2:#d89b2e;--ok:#34d164;--err:#ff5a4d;--r:16px;}
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}
-  body{background:radial-gradient(135% 90% at 50% -10%,#1c1c22 0%,#0c0c0f 55%) fixed;color:var(--ink);
-    font-family:'Outfit',system-ui,sans-serif;-webkit-font-smoothing:antialiased;
-    display:flex;align-items:flex-start;justify-content:center;padding:max(18px,env(safe-area-inset-top)) 16px 44px;min-height:100dvh;}
+  body{background:radial-gradient(135% 90% at 50% -10%,#1c1c22 0%,#0c0c0f 55%) fixed;color:var(--ink);font-family:'Outfit',system-ui,sans-serif;-webkit-font-smoothing:antialiased;display:flex;align-items:flex-start;justify-content:center;padding:max(18px,env(safe-area-inset-top)) 16px 44px;min-height:100dvh;}
   .wrap{width:100%;max-width:480px;margin-top:1vh}
-
   .appbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
-  .logo-note{width:126px;height:auto;color:var(--ink);display:block}
+  .logo-mark{width:46px;height:46px;border-radius:12px;display:block}
   .wmtext{font-family:'Bricolage Grotesque',sans-serif}
   .langbar{display:flex;gap:6px}
   .langbar button{background:var(--soft);color:var(--muted);border-radius:9px;padding:7px 11px;font-size:13px;font-weight:700;border:none;cursor:pointer}
   .langbar button.on{background:linear-gradient(180deg,var(--gold),var(--gold2));color:#1a1a1e}
-
   .card{background:var(--card);border:1px solid #23232b;border-radius:var(--r);padding:20px 16px;margin-bottom:16px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
   h1{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:24px;margin-bottom:4px}
   .sub{color:var(--muted);font-size:14px;margin-bottom:18px}
@@ -67,6 +60,7 @@
   .tile .tp{font-weight:800;font-size:16px;color:var(--gold)}
   .cart-line{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
   .cart-line .cn{flex:1;font-size:15px;font-weight:600}
+  .cart-line .copt{font-size:12px;color:var(--muted);margin-top:2px;font-weight:500}
   .cart-line .lt{font-weight:800;min-width:60px;text-align:right;font-size:15px}
   .stepper{display:flex;align-items:center;background:var(--soft);border-radius:10px;overflow:hidden}
   .stepper button{width:32px;height:32px;background:transparent;color:var(--gold);font-size:19px;font-weight:800}
@@ -74,14 +68,31 @@
   .total-row{display:flex;justify-content:space-between;align-items:center;margin-top:16px}
   .total-row span{color:var(--muted);font-size:15px;font-weight:600}
   .total-row b{font-size:27px;font-weight:800}
+  #changeOut{color:var(--ok)}
   .chips{display:flex;flex-wrap:wrap;gap:8px}
   .chip{background:var(--soft);border-radius:999px;padding:7px 13px;font-size:14px;font-weight:700;display:inline-flex;gap:8px}
   .chip .x{color:var(--muted);font-weight:700;cursor:pointer}
   .row-add{display:flex;gap:8px}.row-add input{flex:1}
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .item{display:flex;align-items:center;gap:12px;padding:12px 13px;border-radius:12px;margin-bottom:8px;background:var(--soft)}
+  .chkrow{display:flex;align-items:center;gap:8px;background:var(--soft);border-radius:11px;padding:13px 14px;font-weight:600;color:var(--ink);font-size:15px;margin:0}
+  .chkrow input{width:20px;height:20px;accent-color:var(--gold);flex:none}
+  .item{display:flex;align-items:center;gap:12px;padding:12px 13px;border-radius:12px;background:var(--soft)}
+  .iteminfo{flex:1;cursor:pointer}
   .item .nm{font-weight:700;font-size:16px}.item .meta{font-size:13px;color:var(--muted);margin-top:1px}
-  .item .pr{margin-left:auto;font-weight:800;white-space:nowrap;color:var(--gold)}.item .x{color:var(--muted);font-weight:700;cursor:pointer;padding-left:6px}
+  .item .pr{font-weight:800;white-space:nowrap;color:var(--gold)}.item .x{color:var(--muted);font-weight:700;cursor:pointer;padding-left:6px}
+  .pwrap{margin-bottom:8px}
+  .attach{display:flex;flex-wrap:wrap;gap:6px;padding:10px 4px 2px}
+  .attlbl{flex-basis:100%;font-size:12px;color:var(--muted);font-weight:700;margin-bottom:2px}
+  .gchip{background:#2a2a32;border:1px solid #34343c;border-radius:999px;padding:6px 11px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer}
+  .gchip.on{background:rgba(230,180,80,.18);border-color:var(--gold);color:var(--gold)}
+  .mgroup{background:var(--soft);border-radius:12px;padding:12px;margin-bottom:10px}
+  .mghead{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .mghead b{font-weight:700}.mghead .meta{font-size:12px;color:var(--muted)}.mghead .x{margin-left:auto;color:var(--muted);cursor:pointer;font-weight:700}
+  .opt{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:14px}
+  .opt .od{color:var(--gold);font-weight:700;margin-left:auto}.opt .x{color:var(--muted);cursor:pointer;padding-left:8px}
+  .miniadd{display:flex;gap:6px;margin-top:8px}
+  .miniadd .pn{flex:1}.miniadd .pp{width:84px}
+  .miniadd input{padding:10px 11px;font-size:14px}
   .empty{color:var(--muted);font-size:14px;padding:14px;border:1px dashed var(--line);border-radius:12px;text-align:center}
   .order{background:var(--soft);border-radius:12px;margin-bottom:8px;overflow:hidden}
   .ohead{display:flex;align-items:center;justify-content:space-between;padding:12px 13px;cursor:pointer;gap:10px}
@@ -89,8 +100,7 @@
   .chev{color:var(--muted);font-size:13px}
   .odetail{padding:0 13px 13px}
   .rcpt{background:#15151a;border-radius:11px;padding:14px}
-  .rtitle{font-weight:800;text-align:center;font-size:15px}
-  .rmeta{text-align:center;color:var(--muted);font-size:12px;margin-bottom:10px}
+  .rtitle{font-weight:800;text-align:center;font-size:15px}.rmeta{text-align:center;color:var(--muted);font-size:12px;margin-bottom:10px}
   .rline{display:flex;justify-content:space-between;font-size:14px;padding:3px 0;gap:10px}
   .rtot{font-weight:800;border-top:1px solid var(--line);margin-top:6px;padding-top:8px}
   .rnote{margin-top:10px;text-align:center;color:var(--muted);font-size:11px}
@@ -98,18 +108,23 @@
   summary{color:var(--gold);font-size:14px;font-weight:700;cursor:pointer;padding:8px 0;list-style:none}
   summary::-webkit-details-marker{display:none}
   .cfgwarn{background:rgba(255,90,77,.16);color:var(--err);padding:14px;border-radius:12px;font-size:14px;line-height:1.5}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center;z-index:50}
+  .sheet{background:var(--card);width:100%;max-width:480px;border-radius:20px 20px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom));max-height:86vh;overflow:auto}
+  .sheet-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+  .sheet-h b{font-size:19px;font-weight:800}.sheet-h .x{color:var(--muted);font-size:22px;cursor:pointer}
+  .og{margin-top:14px}.og .gt{font-size:13px;font-weight:700;color:var(--muted);margin-bottom:8px}.og .gt .req{color:var(--err)}
+  .optrow{display:flex;align-items:center;gap:10px;padding:12px 13px;border:1px solid var(--line);border-radius:11px;margin-bottom:7px;cursor:pointer}
+  .optrow .od{margin-left:auto;color:var(--gold);font-weight:700}
+  .optrow .ck{width:20px;height:20px;border-radius:50%;border:2px solid var(--line);flex:none;display:grid;place-items:center;font-size:12px;font-weight:800;color:#1a1a1e}
+  .optrow.sel{border-color:var(--gold);background:rgba(230,180,80,.10)}
+  .optrow.sel .ck{background:var(--gold);border-color:var(--gold)}
 </style>
 </head>
 <body>
 <div class="wrap">
 
   <div class="appbar">
-    <svg class="logo-note" viewBox="0 0 200 100" role="img" aria-label="easypos">
-      <rect x="6" y="14" width="188" height="72" rx="11" fill="none" stroke="currentColor" stroke-width="2.6"/>
-      <rect x="13" y="22" width="174" height="56" rx="6" fill="none" stroke="currentColor" stroke-width="1"/>
-      <text class="wmtext" x="100" y="58" text-anchor="middle" font-size="23" font-weight="700" fill="currentColor">€asyPOS</text>
-      <text class="wmtext" x="176" y="73" text-anchor="end" font-size="8.5" font-weight="600" fill="currentColor" letter-spacing="1">2026</text>
-    </svg>
+    <img class="logo-mark" src="icon.png" alt="easypos" />
     <div class="langbar"><button data-lang="zh">中</button><button data-lang="en">EN</button><button data-lang="it">IT</button></div>
   </div>
 
@@ -160,6 +175,7 @@
       <div class="section-t" data-i18n="cat">分类</div>
       <div class="row-add"><input id="catName" data-ph="cat_ph" placeholder="如:咖啡 / 早午餐 / 甜点" /><button class="btn sm" id="addCatBtn" data-i18n="add">添加</button></div>
       <div class="chips" id="catList" style="margin-top:12px"></div>
+
       <div class="section-t" data-i18n="products">菜品</div>
       <label data-i18n="name">名称</label><input id="pName" data-ph="name_ph" placeholder="如:Cappuccino" />
       <div class="row2">
@@ -170,6 +186,16 @@
       <button class="btn" id="addProdBtn" data-i18n="add_prod">添加菜品</button>
       <div class="msg" id="menuMsg"></div>
       <div id="prodList" style="margin-top:14px"></div>
+
+      <div class="section-t" data-i18n="mod_groups">选项组</div>
+      <input id="mgName" data-ph="mg_name_ph" placeholder="组名(如 牛奶/份量)" />
+      <div class="row2" style="margin-top:10px">
+        <select id="mgType"><option value="single" data-i18n="single">单选</option><option value="multi" data-i18n="multi">多选</option></select>
+        <label class="chkrow"><input type="checkbox" id="mgReq" /> <span data-i18n="required">必选</span></label>
+      </div>
+      <button class="btn sm" id="addMgBtn" style="margin-top:10px" data-i18n="add_group">加选项组</button>
+      <div id="mgList" style="margin-top:12px"></div>
+
       <details>
         <summary data-i18n="store_settings">店铺设置 / 添加店铺</summary>
         <label data-i18n="store_name">店铺名称(显示名)</label><input id="storeName" placeholder="Fluffy Brunch" />
@@ -182,76 +208,59 @@
   </div>
 </div>
 
+<div id="optModal" class="modal hidden">
+  <div class="sheet">
+    <div class="sheet-h"><b id="omName"></b><span class="x" id="omClose">✕</span></div>
+    <div id="omGroups"></div>
+    <div class="total-row"><span data-i18n="total">合计</span><b id="omPrice">€0.00</b></div>
+    <button class="btn" id="omAdd" data-i18n="add_to_cart">加入购物车</button>
+    <div class="msg" id="omMsg"></div>
+  </div>
+</div>
+
 <script>
   const I18N={
-    cfg_warn:{zh:"还没读到 Supabase 配置。请确认 config.js 和 index.html 在同一文件夹并填了值。",en:"Supabase config not found. Make sure config.js is next to index.html and filled in.",it:"Configurazione Supabase non trovata. Assicurati che config.js sia accanto a index.html e compilato."},
-    login_title:{zh:"登录",en:"Log in",it:"Accedi"},
-    login_sub:{zh:"用你在 Supabase 建的账户登录",en:"Sign in with your Supabase account",it:"Accedi con il tuo account Supabase"},
-    email:{zh:"邮箱",en:"Email",it:"Email"},
-    password:{zh:"密码",en:"Password",it:"Password"},
-    login_btn:{zh:"登录",en:"Log in",it:"Accedi"},
-    logging_in:{zh:"登录中…",en:"Signing in…",it:"Accesso…"},
-    login_fail:{zh:"登录失败:",en:"Login failed: ",it:"Accesso non riuscito: "},
-    account:{zh:"账户:",en:"Account: ",it:"Account: "},
-    logout:{zh:"退出",en:"Log out",it:"Esci"},
-    cur_store:{zh:"当前店铺",en:"Current shop",it:"Negozio attuale"},
-    no_store_opt:{zh:"（请先在「菜单」里添加店铺）",en:"(Add a shop in “Menu” first)",it:"(Aggiungi un negozio in “Menu”)"},
-    tab_sell:{zh:"收银",en:"Sell",it:"Cassa"},
-    tab_orders:{zh:"订单",en:"Orders",it:"Ordini"},
-    tab_menu:{zh:"菜单",en:"Menu",it:"Menu"},
-    today:{zh:"今日",en:"Today",it:"Oggi"},
-    orders_unit:{zh:"单",en:"orders",it:"ordini"},
-    items_word:{zh:"件",en:"items",it:"art."},
-    no_orders:{zh:"还没有订单",en:"No orders yet",it:"Nessun ordine"},
-    paid_cash:{zh:"收现金",en:"Cash paid",it:"Contanti"},
+    cfg_warn:{zh:"还没读到 Supabase 配置。请确认 config.js 和 index.html 在同一文件夹并填了值。",en:"Supabase config not found. Make sure config.js is next to index.html and filled in.",it:"Configurazione Supabase non trovata."},
+    login_title:{zh:"登录",en:"Log in",it:"Accedi"},login_sub:{zh:"用你在 Supabase 建的账户登录",en:"Sign in with your Supabase account",it:"Accedi con il tuo account Supabase"},
+    email:{zh:"邮箱",en:"Email",it:"Email"},password:{zh:"密码",en:"Password",it:"Password"},
+    login_btn:{zh:"登录",en:"Log in",it:"Accedi"},logging_in:{zh:"登录中…",en:"Signing in…",it:"Accesso…"},login_fail:{zh:"登录失败:",en:"Login failed: ",it:"Accesso non riuscito: "},
+    account:{zh:"账户:",en:"Account: ",it:"Account: "},logout:{zh:"退出",en:"Log out",it:"Esci"},
+    cur_store:{zh:"当前店铺",en:"Current shop",it:"Negozio attuale"},no_store_opt:{zh:"（请先在「菜单」里添加店铺）",en:"(Add a shop in “Menu” first)",it:"(Aggiungi un negozio in “Menu”)"},
+    tab_sell:{zh:"收银",en:"Sell",it:"Cassa"},tab_orders:{zh:"订单",en:"Orders",it:"Ordini"},tab_menu:{zh:"菜单",en:"Menu",it:"Menu"},
+    today:{zh:"今日",en:"Today",it:"Oggi"},orders_unit:{zh:"单",en:"orders",it:"ordini"},items_word:{zh:"件",en:"items",it:"art."},
+    no_orders:{zh:"还没有订单",en:"No orders yet",it:"Nessun ordine"},paid_cash:{zh:"收现金",en:"Cash paid",it:"Contanti"},
     receipt_note:{zh:"内部凭证 · 非正式税务小票",en:"Internal record · not a fiscal receipt",it:"Documento interno · non valido fiscalmente"},
-    all:{zh:"全部",en:"All",it:"Tutti"},
-    cart:{zh:"购物车",en:"Cart",it:"Carrello"},
-    cart_empty:{zh:"点上面的菜品加入",en:"Tap items above to add",it:"Tocca i prodotti sopra"},
-    total:{zh:"合计",en:"Total",it:"Totale"},
-    checkout:{zh:"结账",en:"Checkout",it:"Paga"},
-    cash_received:{zh:"收到现金 €",en:"Cash received €",it:"Contanti ricevuti €"},
-    change:{zh:"找零",en:"Change",it:"Resto"},
-    finish:{zh:"完成收款",en:"Complete",it:"Completa"},
-    cancel:{zh:"取消",en:"Cancel",it:"Annulla"},
-    pay_method:{zh:"付款方式",en:"Payment method",it:"Metodo di pagamento"},
-    pay_cash:{zh:"现金",en:"Cash",it:"Contanti"},
-    pay_card:{zh:"刷卡",en:"Card",it:"Carta"},
+    all:{zh:"全部",en:"All",it:"Tutti"},cart:{zh:"购物车",en:"Cart",it:"Carrello"},cart_empty:{zh:"点上面的菜品加入",en:"Tap items above to add",it:"Tocca i prodotti sopra"},
+    total:{zh:"合计",en:"Total",it:"Totale"},checkout:{zh:"结账",en:"Checkout",it:"Paga"},
+    cash_received:{zh:"收到现金 €",en:"Cash received €",it:"Contanti ricevuti €"},change:{zh:"找零",en:"Change",it:"Resto"},
+    finish:{zh:"完成收款",en:"Complete",it:"Completa"},cancel:{zh:"取消",en:"Cancel",it:"Annulla"},
+    pay_method:{zh:"付款方式",en:"Payment method",it:"Metodo di pagamento"},pay_cash:{zh:"现金",en:"Cash",it:"Contanti"},pay_card:{zh:"刷卡",en:"Card",it:"Carta"},
     cash_short:{zh:"收到的现金不够(合计 {t})",en:"Not enough cash (total {t})",it:"Contanti insufficienti (totale {t})"},
-    saving:{zh:"保存中…",en:"Saving…",it:"Salvataggio…"},
-    done_change:{zh:"✓ 完成 · 找零 {c}",en:"✓ Done · change {c}",it:"✓ Fatto · resto {c}"},
-    save_fail:{zh:"保存失败:",en:"Save failed: ",it:"Salvataggio non riuscito: "},
-    items_fail:{zh:"明细保存失败:",en:"Items save failed: ",it:"Salvataggio voci non riuscito: "},
+    saving:{zh:"保存中…",en:"Saving…",it:"Salvataggio…"},done_change:{zh:"✓ 完成 · 找零 {c}",en:"✓ Done · change {c}",it:"✓ Fatto · resto {c}"},
+    save_fail:{zh:"保存失败:",en:"Save failed: ",it:"Salvataggio non riuscito: "},items_fail:{zh:"明细保存失败:",en:"Items save failed: ",it:"Salvataggio voci non riuscito: "},
     no_prod_sell:{zh:"没有菜品,去「菜单」添加",en:"No items — add them in “Menu”",it:"Nessun prodotto — aggiungi in “Menu”"},
-    cat:{zh:"分类",en:"Categories",it:"Categorie"},
-    cat_ph:{zh:"如:咖啡 / 早午餐 / 甜点",en:"e.g. Coffee / Brunch / Dessert",it:"es. Caffè / Brunch / Dolci"},
-    add:{zh:"添加",en:"Add",it:"Aggiungi"},
-    no_cat:{zh:"还没有分类",en:"No categories yet",it:"Nessuna categoria"},
-    products:{zh:"菜品",en:"Products",it:"Prodotti"},
-    name:{zh:"名称",en:"Name",it:"Nome"},
-    name_ph:{zh:"如:Cappuccino",en:"e.g. Cappuccino",it:"es. Cappuccino"},
-    price:{zh:"价格 €",en:"Price €",it:"Prezzo €"},
-    unit:{zh:"单位",en:"Unit",it:"Unità"},
-    piece:{zh:"计件",en:"Per item",it:"A pezzo"},
-    weight:{zh:"称重",en:"By weight",it:"A peso"},
-    no_cat_opt:{zh:"（无分类）",en:"(No category)",it:"(Nessuna categoria)"},
-    add_prod:{zh:"添加菜品",en:"Add product",it:"Aggiungi prodotto"},
-    adding:{zh:"添加中…",en:"Adding…",it:"Aggiunta…"},
-    added:{zh:"已添加 ✓",en:"Added ✓",it:"Aggiunto ✓"},
-    need_name:{zh:"请填名称",en:"Enter a name",it:"Inserisci un nome"},
-    need_price:{zh:"请填价格",en:"Enter a price",it:"Inserisci un prezzo"},
-    fail:{zh:"失败:",en:"Failed: ",it:"Errore: "},
-    no_prod:{zh:"还没有菜品",en:"No products yet",it:"Nessun prodotto"},
+    cat:{zh:"分类",en:"Categories",it:"Categorie"},cat_ph:{zh:"如:咖啡 / 早午餐 / 甜点",en:"e.g. Coffee / Brunch / Dessert",it:"es. Caffè / Brunch / Dolci"},
+    add:{zh:"添加",en:"Add",it:"Aggiungi"},no_cat:{zh:"还没有分类",en:"No categories yet",it:"Nessuna categoria"},
+    products:{zh:"菜品",en:"Products",it:"Prodotti"},name:{zh:"名称",en:"Name",it:"Nome"},name_ph:{zh:"如:Cappuccino",en:"e.g. Cappuccino",it:"es. Cappuccino"},
+    price:{zh:"价格 €",en:"Price €",it:"Prezzo €"},unit:{zh:"单位",en:"Unit",it:"Unità"},piece:{zh:"计件",en:"Per item",it:"A pezzo"},weight:{zh:"称重",en:"By weight",it:"A peso"},
+    no_cat_opt:{zh:"（无分类）",en:"(No category)",it:"(Nessuna categoria)"},add_prod:{zh:"添加菜品",en:"Add product",it:"Aggiungi prodotto"},
+    adding:{zh:"添加中…",en:"Adding…",it:"Aggiunta…"},added:{zh:"已添加 ✓",en:"Added ✓",it:"Aggiunto ✓"},
+    need_name:{zh:"请填名称",en:"Enter a name",it:"Inserisci un nome"},need_price:{zh:"请填价格",en:"Enter a price",it:"Inserisci un prezzo"},
+    fail:{zh:"失败:",en:"Failed: ",it:"Errore: "},no_prod:{zh:"还没有菜品",en:"No products yet",it:"Nessun prodotto"},
     need_store:{zh:"请先添加并选择店铺",en:"Add and select a shop first",it:"Aggiungi e seleziona un negozio"},
-    del_cat:{zh:"删除这个分类?(菜品不删,只是变无分类)",en:"Delete this category? (products kept, just uncategorized)",it:"Eliminare questa categoria? (i prodotti restano, senza categoria)"},
+    del_cat:{zh:"删除这个分类?(菜品不删,只是变无分类)",en:"Delete this category? (products kept, just uncategorized)",it:"Eliminare questa categoria?"},
     del_prod:{zh:"删除这个菜品?",en:"Delete this product?",it:"Eliminare questo prodotto?"},
     store_settings:{zh:"店铺设置 / 添加店铺",en:"Shop settings / Add shop",it:"Impostazioni / Aggiungi negozio"},
     store_name:{zh:"店铺名称(显示名)",en:"Shop name (display)",it:"Nome negozio (visualizzato)"},
     company:{zh:"公司名称(开票法定名 / Ragione sociale)",en:"Company name (legal / Ragione sociale)",it:"Ragione sociale"},
-    address_opt:{zh:"地址(可选)",en:"Address (optional)",it:"Indirizzo (facoltativo)"},
-    piva_opt:{zh:"P.IVA(可选)",en:"VAT no. (optional)",it:"P.IVA (facoltativo)"},
-    add_store:{zh:"添加店铺",en:"Add shop",it:"Aggiungi negozio"},
-    need_store_name:{zh:"请填店铺名称",en:"Enter a shop name",it:"Inserisci il nome del negozio"}
+    address_opt:{zh:"地址(可选)",en:"Address (optional)",it:"Indirizzo (facoltativo)"},piva_opt:{zh:"P.IVA(可选)",en:"VAT no. (optional)",it:"P.IVA (facoltativo)"},
+    add_store:{zh:"添加店铺",en:"Add shop",it:"Aggiungi negozio"},need_store_name:{zh:"请填店铺名称",en:"Enter a shop name",it:"Inserisci il nome del negozio"},
+    mod_groups:{zh:"选项组",en:"Option groups",it:"Gruppi opzioni"},mg_name_ph:{zh:"组名(如 牛奶/份量)",en:"Group name (e.g. Milk/Size)",it:"Nome gruppo (es. Latte/Misura)"},
+    single:{zh:"单选",en:"Single",it:"Singola"},multi:{zh:"多选",en:"Multi",it:"Multipla"},required:{zh:"必选",en:"Required",it:"Obblig."},
+    opt_name_ph:{zh:"选项名",en:"Option",it:"Opzione"},opt_price_ph:{zh:"加价",en:"+Price",it:"+Prezzo"},add_group:{zh:"加选项组",en:"Add group",it:"Aggiungi gruppo"},
+    attach_groups:{zh:"适用选项组",en:"Option groups",it:"Gruppi opzioni"},no_groups:{zh:"还没有选项组(在上面建)",en:"No option groups yet",it:"Nessun gruppo"},
+    add_to_cart:{zh:"加入购物车",en:"Add to cart",it:"Aggiungi"},pick_required:{zh:"请先选必选项",en:"Select required options",it:"Seleziona le opzioni obbligatorie"},
+    del_group:{zh:"删除选项组?(挂在菜品上的也会取消)",en:"Delete group? (also detaches from products)",it:"Eliminare il gruppo?"}
   };
 
   const $=(id)=>document.getElementById(id);
@@ -263,24 +272,26 @@
     document.querySelectorAll("[data-ph]").forEach(el=>el.placeholder=t(el.dataset.ph));
     document.querySelectorAll(".langbar button").forEach(b=>b.classList.toggle("on",b.dataset.lang===lang));
   }
-  function switchLang(l){
+  async function switchLang(l){
     lang=l; try{localStorage.setItem("lang",l);}catch(e){}
-    applyI18n(); renderCart(); renderFilter();
-    if(storeId()){ loadCategories(); loadProducts(); loadToday(); if(!$("ordersTab").classList.contains("hidden"))loadOrders(); }
+    applyI18n(); renderCart();
+    if(storeId()){ await loadCategories(); await loadGroups(); await loadPmg(); await loadProducts(); loadToday(); if(!$("ordersTab").classList.contains("hidden"))loadOrders(); }
   }
   document.querySelectorAll(".langbar button").forEach(b=>b.onclick=()=>switchLang(b.dataset.lang));
 
   const show=(el,txt,k)=>{el.textContent=txt;el.className="msg show "+(k||"");};
   const hide=(el)=>{el.className="msg";};
   const money=(n)=>"€"+Number(n||0).toFixed(2);
+  const deltaFmt=(d)=>d>0?("+"+money(d)):d<0?("−"+money(Math.abs(d))):money(0);
   const unitLabel=(u)=>t(u==="weight"?"weight":"piece");
   function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 
   applyI18n();
   if(!window.SUPA_URL||!window.SUPA_KEY||window.SUPA_URL.includes("你的")||window.SUPA_KEY.includes("你的")){ $("cfgView").classList.remove("hidden"); throw new Error("config missing"); }
   const sb=supabase.createClient(window.SUPA_URL,window.SUPA_KEY);
-  let stores=[], categories=[], products=[], cart=[], filterCat="all";
+  let stores=[], categories=[], products=[], groups=[], pmg=[], cart=[], filterCat="all";
   const storeId=()=>$("storeSel").value||null;
+  function groupsForProduct(pid){ const ids=pmg.filter(x=>x.product_id===pid).map(x=>x.group_id); return groups.filter(g=>ids.includes(g.id)); }
 
   async function render(){
     const {data:{session}}=await sb.auth.getSession();
@@ -306,12 +317,12 @@
     const {data,error}=await sb.from("stores").select("*").order("created_at");
     if(error)return; stores=data||[];
     const sel=$("storeSel");
-    if(!stores.length){ sel.innerHTML=`<option value="">${t("no_store_opt")}</option>`; $("prodGrid").innerHTML=""; $("prodList").innerHTML=""; $("catList").innerHTML=""; cart=[]; renderCart(); return; }
+    if(!stores.length){ sel.innerHTML=`<option value="">${t("no_store_opt")}</option>`; $("prodGrid").innerHTML=""; $("prodList").innerHTML=""; $("catList").innerHTML=""; $("mgList").innerHTML=""; cart=[]; renderCart(); return; }
     sel.innerHTML=stores.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("");
     await reloadStore();
   }
   $("storeSel").onchange=reloadStore;
-  async function reloadStore(){ cart=[]; renderCart(); await loadCategories(); await loadProducts(); await loadToday(); }
+  async function reloadStore(){ cart=[]; renderCart(); await loadCategories(); await loadGroups(); await loadPmg(); await loadProducts(); await loadToday(); }
 
   async function loadCategories(){
     const sid=storeId(); if(!sid)return;
@@ -329,6 +340,47 @@
     f.innerHTML=html;
     f.querySelectorAll('.fchip').forEach(ch=>ch.onclick=()=>{filterCat=ch.dataset.f; renderFilter(); renderGrid();});
   }
+
+  async function loadGroups(){
+    const sid=storeId(); if(!sid){groups=[];return;}
+    const {data,error}=await sb.from("modifier_groups").select("*, modifier_options(*)").eq("store_id",sid).order("created_at");
+    groups=error?[]:(data||[]);
+    groups.forEach(g=>(g.modifier_options||[]).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at)));
+    renderGroups();
+  }
+  function renderGroups(){
+    const el=$("mgList"); if(!el)return;
+    if(!groups.length){ el.innerHTML=`<div class="empty">${t("no_groups")}</div>`; return; }
+    el.innerHTML=groups.map(g=>{
+      const opts=(g.modifier_options||[]).map(o=>`<div class="opt"><span>${esc(o.name)}</span><span class="od">${deltaFmt(o.price_delta)}</span><span class="x" data-delopt="${o.id}">✕</span></div>`).join("");
+      const typ=g.select_type==="multi"?t("multi"):t("single");
+      const req=g.required?(" · "+t("required")):"";
+      return `<div class="mgroup"><div class="mghead"><b>${esc(g.name)}</b><span class="meta">${typ}${req}</span><span class="x" data-delgroup="${g.id}">✕</span></div>
+        <div>${opts}</div>
+        <div class="miniadd"><input class="pn" data-optname="${g.id}" placeholder="${t('opt_name_ph')}"/><input class="pp" type="number" step="0.01" data-optprice="${g.id}" placeholder="${t('opt_price_ph')}"/><button class="btn sm" data-addopt="${g.id}">${t('add')}</button></div></div>`;
+    }).join("");
+    el.querySelectorAll('[data-delgroup]').forEach(x=>x.onclick=()=>delGroup(x.dataset.delgroup));
+    el.querySelectorAll('[data-delopt]').forEach(x=>x.onclick=()=>delOption(x.dataset.delopt));
+    el.querySelectorAll('[data-addopt]').forEach(b=>b.onclick=()=>{
+      const gid=b.dataset.addopt;
+      const nm=el.querySelector(`[data-optname="${gid}"]`).value.trim();
+      const pp=parseFloat(el.querySelector(`[data-optprice="${gid}"]`).value)||0;
+      if(!nm)return; addOption(gid,nm,pp);
+    });
+  }
+  $("addMgBtn").onclick=async()=>{
+    const sid=storeId(); const name=$("mgName").value.trim();
+    if(!sid){alert(t("need_store"));return;} if(!name)return;
+    const {error}=await sb.from("modifier_groups").insert({store_id:sid,name,select_type:$("mgType").value,required:$("mgReq").checked});
+    if(error){alert(t("fail")+error.message);return;}
+    $("mgName").value=""; $("mgReq").checked=false; loadGroups();
+  };
+  async function addOption(gid,name,delta){ const {error}=await sb.from("modifier_options").insert({group_id:gid,name,price_delta:delta}); if(error){alert(t("fail")+error.message);return;} loadGroups(); }
+  async function delOption(id){ const {error}=await sb.from("modifier_options").delete().eq("id",id); if(error){alert(error.message);return;} loadGroups(); }
+  async function delGroup(id){ if(!confirm(t("del_group")))return; const {error}=await sb.from("modifier_groups").delete().eq("id",id); if(error){alert(error.message);return;} await loadGroups(); await loadPmg(); loadProducts(); }
+
+  async function loadPmg(){ const {data,error}=await sb.from("product_modifier_groups").select("*"); pmg=error?[]:(data||[]); }
+
   async function loadProducts(){
     const sid=storeId(); if(!sid)return;
     const {data,error}=await sb.from("products").select("*, categories(name)").eq("store_id",sid).order("created_at");
@@ -336,10 +388,22 @@
     const list=$("prodList");
     list.innerHTML=products.length?products.map(p=>{
       const meta=[p.categories?.name,unitLabel(p.unit)].filter(Boolean).map(esc).join(" · ");
-      return `<div class="item"><div><div class="nm">${esc(p.name)}</div><div class="meta">${meta}</div></div><div class="pr">${money(p.price)}</div><span class="x" data-prod="${p.id}">✕</span></div>`;
+      const att=groups.length?(`<div class="attlbl">${t("attach_groups")}</div>`+groups.map(g=>{
+        const on=pmg.some(x=>x.product_id===p.id&&x.group_id===g.id);
+        return `<span class="gchip ${on?'on':''}" data-pg="${p.id}|${g.id}">${esc(g.name)}</span>`;
+      }).join("")):`<div class="attlbl">${t("no_groups")}</div>`;
+      return `<div class="pwrap"><div class="item"><div class="iteminfo" data-exp="${p.id}"><div class="nm">${esc(p.name)}</div><div class="meta">${meta}</div></div><div class="pr">${money(p.price)}</div><span class="x" data-prod="${p.id}">✕</span></div><div class="attach hidden" id="att-${p.id}">${att}</div></div>`;
     }).join(""):`<div class="empty">${t("no_prod")}</div>`;
-    list.querySelectorAll('.x').forEach(x=>x.onclick=()=>delProduct(x.dataset.prod));
+    list.querySelectorAll('.iteminfo').forEach(el=>el.onclick=()=>$("att-"+el.dataset.exp).classList.toggle("hidden"));
+    list.querySelectorAll('[data-prod]').forEach(x=>x.onclick=()=>delProduct(x.dataset.prod));
+    list.querySelectorAll('.gchip').forEach(c=>c.onclick=()=>{ const [pid,gid]=c.dataset.pg.split("|"); toggleAttach(pid,gid); });
     renderGrid();
+  }
+  async function toggleAttach(pid,gid){
+    const exists=pmg.some(x=>x.product_id===pid&&x.group_id===gid);
+    if(exists){ await sb.from("product_modifier_groups").delete().eq("product_id",pid).eq("group_id",gid); }
+    else { await sb.from("product_modifier_groups").insert({product_id:pid,group_id:gid}); }
+    await loadPmg(); loadProducts();
   }
   function renderGrid(){
     const g=$("prodGrid");
@@ -347,17 +411,47 @@
     if(filterCat!=="all")ps=ps.filter(p=>p.category_id===filterCat);
     if(!ps.length){ g.innerHTML=`<div class="empty" style="grid-column:1/-1">${t("no_prod_sell")}</div>`; return; }
     g.innerHTML=ps.map(p=>`<button class="tile" data-id="${p.id}"><span class="tn">${esc(p.name)}</span><span class="tp">${money(p.price)}</span></button>`).join("");
-    g.querySelectorAll('.tile').forEach(el=>el.onclick=()=>addToCart(el.dataset.id));
+    g.querySelectorAll('.tile').forEach(el=>el.onclick=()=>tapProduct(el.dataset.id));
   }
 
-  function addToCart(pid){ const p=products.find(x=>x.id===pid); if(!p)return; const line=cart.find(l=>l.product_id===pid); if(line)line.qty++; else cart.push({product_id:p.id,name:p.name,price:Number(p.price),qty:1}); renderCart(); }
-  function changeQty(pid,d){ const line=cart.find(l=>l.product_id===pid); if(!line)return; line.qty+=d; if(line.qty<=0)cart=cart.filter(l=>l!==line); renderCart(); }
+  function tapProduct(pid){ const p=products.find(x=>x.id===pid); if(!p)return; const gs=groupsForProduct(pid); if(gs.length) openOptions(p,gs); else addLine({key:p.id,product_id:p.id,name:p.name,price:Number(p.price),qty:1,options_text:null}); }
+
+  let omP=null, omG=[], omBase=0;
+  function openOptions(p,gs){
+    omP=p; omG=gs; omBase=Number(p.price); hide($("omMsg"));
+    $("omName").textContent=p.name;
+    $("omGroups").innerHTML=gs.map(g=>{
+      const rows=(g.modifier_options||[]).map(o=>`<div class="optrow" data-g="${g.id}" data-o="${o.id}" data-d="${o.price_delta}" data-single="${g.select_type==='single'?1:0}" data-name="${esc(o.name)}"><span>${esc(o.name)}</span><span class="od">${o.price_delta!=0?deltaFmt(o.price_delta):""}</span><span class="ck"></span></div>`).join("");
+      return `<div class="og"><div class="gt">${esc(g.name)} <span style="font-weight:500;color:var(--muted)">· ${g.select_type==='multi'?t('multi'):t('single')}</span>${g.required?` <span class="req">*${t('required')}</span>`:""}</div>${rows}</div>`;
+    }).join("");
+    $("omGroups").querySelectorAll('.optrow').forEach(r=>r.onclick=()=>{
+      if(r.dataset.single==="1"){ $("omGroups").querySelectorAll(`.optrow[data-g="${r.dataset.g}"]`).forEach(s=>s.classList.remove("sel")); r.classList.add("sel"); }
+      else r.classList.toggle("sel");
+      recalcOpt();
+    });
+    recalcOpt(); $("optModal").classList.remove("hidden");
+  }
+  function recalcOpt(){ let d=0; $("omGroups").querySelectorAll('.optrow.sel').forEach(r=>d+=Number(r.dataset.d)); $("omPrice").textContent=money(omBase+d); }
+  $("omClose").onclick=()=>$("optModal").classList.add("hidden");
+  $("optModal").onclick=(e)=>{ if(e.target===$("optModal"))$("optModal").classList.add("hidden"); };
+  $("omAdd").onclick=()=>{
+    for(const g of omG){ if(g.required && !$("omGroups").querySelector(`.optrow.sel[data-g="${g.id}"]`)){ show($("omMsg"),t("pick_required"),"err"); return; } }
+    const sel=[...$("omGroups").querySelectorAll('.optrow.sel')];
+    const ids=sel.map(r=>r.dataset.o).sort();
+    const names=sel.map(r=>r.dataset.name);
+    let d=0; sel.forEach(r=>d+=Number(r.dataset.d));
+    addLine({key:omP.id+"|"+ids.join(","), product_id:omP.id, name:omP.name, price:omBase+d, qty:1, options_text:names.join(", ")||null});
+    $("optModal").classList.add("hidden");
+  };
+
+  function addLine(line){ const ex=cart.find(l=>l.key===line.key); if(ex)ex.qty++; else cart.push(line); renderCart(); }
+  function changeQty(key,dq){ const l=cart.find(x=>x.key===key); if(!l)return; l.qty+=dq; if(l.qty<=0)cart=cart.filter(x=>x!==l); renderCart(); }
   function cartTotal(){ return cart.reduce((s,l)=>s+l.price*l.qty,0); }
   function renderCart(){
     const c=$("cart"); if(!c)return;
     if(!cart.length){ c.innerHTML=`<div class="empty">${t("cart_empty")}</div>`; }
     else{
-      c.innerHTML=cart.map(l=>`<div class="cart-line"><span class="cn">${esc(l.name)}</span><span class="stepper"><button data-m="${l.product_id}">−</button><span class="q">${l.qty}</span><button data-p="${l.product_id}">+</button></span><span class="lt">${money(l.price*l.qty)}</span></div>`).join("");
+      c.innerHTML=cart.map(l=>`<div class="cart-line"><div class="cn"><div>${esc(l.name)}</div>${l.options_text?`<div class="copt">${esc(l.options_text)}</div>`:""}</div><span class="stepper"><button data-m="${l.key}">−</button><span class="q">${l.qty}</span><button data-p="${l.key}">+</button></span><span class="lt">${money(l.price*l.qty)}</span></div>`).join("");
       c.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>changeQty(b.dataset.m,-1));
       c.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>changeQty(b.dataset.p,1));
     }
@@ -373,23 +467,17 @@
   $("cancelCheckout").onclick=()=>$("checkoutPanel").classList.add("hidden");
   $("cashInput").oninput=()=>{ const ch=parseFloat($("cashInput").value)-cartTotal(); $("changeOut").textContent=money(isNaN(ch)?0:Math.max(0,ch)); };
   $("finishBtn").onclick=async()=>{
-    hide($("payMsg")); const total=cartTotal();
-    let cash=null, change=null;
-    if(payMethod==="cash"){
-      cash=parseFloat($("cashInput").value);
-      if(isNaN(cash)||cash<total){ show($("payMsg"),t("cash_short",{t:money(total)}),"err"); return; }
-      change=+(cash-total).toFixed(2);
-    }
+    hide($("payMsg")); const total=cartTotal(); let cash=null,change=null;
+    if(payMethod==="cash"){ cash=parseFloat($("cashInput").value); if(isNaN(cash)||cash<total){ show($("payMsg"),t("cash_short",{t:money(total)}),"err"); return; } change=+(cash-total).toFixed(2); }
     const b=$("finishBtn"); b.disabled=true; b.textContent=t("saving"); const sid=storeId();
     const {data:order,error}=await sb.from("orders").insert({store_id:sid,total:+total.toFixed(2),payment_method:payMethod,cash_received:cash,change_given:change,status:"completed"}).select().single();
     if(error){ b.disabled=false; b.textContent=t("finish"); show($("payMsg"),t("save_fail")+error.message,"err"); return; }
-    const items=cart.map(l=>({order_id:order.id,product_id:l.product_id,name:l.name,price:l.price,qty:l.qty,line_total:+(l.price*l.qty).toFixed(2)}));
+    const items=cart.map(l=>({order_id:order.id,product_id:l.product_id,name:l.name,price:l.price,qty:l.qty,line_total:+(l.price*l.qty).toFixed(2),options_text:l.options_text||null}));
     const {error:e2}=await sb.from("order_items").insert(items);
     b.disabled=false; b.textContent=t("finish");
     if(e2){ show($("payMsg"),t("items_fail")+e2.message,"err"); return; }
     cart=[]; renderCart(); $("checkoutPanel").classList.add("hidden"); await loadToday();
-    const okmsg = payMethod==="cash" ? t("done_change",{c:money(change)}) : "✓ "+t("pay_card");
-    show($("payMsg"),okmsg,"ok"); setTimeout(()=>hide($("payMsg")),4000);
+    show($("payMsg"), payMethod==="cash"?t("done_change",{c:money(change)}):"✓ "+t("pay_card"),"ok"); setTimeout(()=>hide($("payMsg")),4000);
   };
 
   async function loadToday(){
@@ -410,19 +498,13 @@
     list.innerHTML=data.map(o=>{
       const time=new Date(o.created_at).toLocaleString();
       const n=(o.order_items||[]).reduce((s,i)=>s+Number(i.qty),0);
-      const lines=(o.order_items||[]).map(i=>`<div class="rline"><span>${esc(i.name)} ×${i.qty}</span><span>${money(i.line_total)}</span></div>`).join("");
-      return `<div class="order">
-        <div class="ohead" data-o="${o.id}"><div><div class="nm">${money(o.total)}</div><div class="meta">${time} · ${n} ${t("items_word")}</div></div><span class="chev">▸</span></div>
-        <div class="odetail hidden" id="od-${o.id}"><div class="rcpt">
-          <div class="rtitle">${esc(store.company_name||store.name||"")}</div>
-          <div class="rmeta">${time}</div>
-          ${lines}
+      const lines=(o.order_items||[]).map(i=>`<div class="rline"><span>${esc(i.name)}${i.options_text?` <span style="color:var(--muted)">(${esc(i.options_text)})</span>`:""} ×${i.qty}</span><span>${money(i.line_total)}</span></div>`).join("");
+      return `<div class="order"><div class="ohead" data-o="${o.id}"><div><div class="nm">${money(o.total)}</div><div class="meta">${time} · ${n} ${t("items_word")}</div></div><span class="chev">▸</span></div>
+        <div class="odetail hidden" id="od-${o.id}"><div class="rcpt"><div class="rtitle">${esc(store.company_name||store.name||"")}</div><div class="rmeta">${time}</div>${lines}
           <div class="rline rtot"><span>${t("total")}</span><span>${money(o.total)}</span></div>
           <div class="rline"><span>${t("pay_method")}</span><span>${o.payment_method==="card"?t("pay_card"):t("pay_cash")}</span></div>
           ${o.payment_method==="cash"?`<div class="rline"><span>${t("paid_cash")}</span><span>${money(o.cash_received)}</span></div><div class="rline"><span>${t("change")}</span><span>${money(o.change_given)}</span></div>`:""}
-          <div class="rnote">${t("receipt_note")}</div>
-        </div></div>
-      </div>`;
+          <div class="rnote">${t("receipt_note")}</div></div></div></div>`;
     }).join("");
     list.querySelectorAll('.ohead').forEach(h=>h.onclick=()=>{ const d=$("od-"+h.dataset.o); d.classList.toggle("hidden"); h.querySelector('.chev').textContent=d.classList.contains("hidden")?"▸":"▾"; });
   }
