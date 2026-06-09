@@ -209,6 +209,7 @@
       </div>
       <div class="section-t" data-i18n="new_order">新点单</div>
       <div id="addBanner" class="hidden" style="background:rgba(230,180,80,.16);color:var(--gold);font-weight:700;padding:10px 12px;border-radius:10px;margin-bottom:12px;font-size:14px"></div>
+      <input id="prodSearch" data-ph="search_ph" placeholder="搜索菜品…" autocomplete="off" style="margin-bottom:10px" />
       <div class="filter" id="catFilter2"></div>
       <div class="grid-prod" id="prodGrid2"></div>
       <div class="section-t" data-i18n="cart">购物车</div>
@@ -516,6 +517,7 @@
     cur_user:{zh:"当前",en:"Current",it:"Attuale"},
     lock_switch:{zh:"锁定 / 换人",en:"Lock / switch",it:"Blocca / cambia"},
     lock_confirm:{zh:"锁定并切换用户?需要重新登录。",en:"Lock and switch user? You'll need to log in again.",it:"Bloccare e cambiare utente? Dovrai riaccedere."},
+    search_ph:{zh:"搜索菜品…",en:"Search items…",it:"Cerca prodotti…"},
     pick_user:{zh:"选择用户",en:"Select user",it:"Seleziona utente"},
     set_users:{zh:"用户",en:"Users",it:"Utenti"},
     user_name:{zh:"用户名",en:"User name",it:"Nome utente"},
@@ -581,7 +583,7 @@
   applyI18n();
   if(!window.SUPA_URL||!window.SUPA_KEY||window.SUPA_URL.includes("你的")||window.SUPA_KEY.includes("你的")){ $("cfgView").classList.remove("hidden"); throw new Error("config missing"); }
   const sb=supabase.createClient(window.SUPA_URL,window.SUPA_KEY);
-  let stores=[], categories=[], products=[], groups=[], pmg=[], tables=[], cart=[], filterCat="all";
+  let stores=[], categories=[], products=[], groups=[], pmg=[], tables=[], cart=[], filterCat="all", searchQuery="";
   let users=[], currentUser=null;
   const PERMS=[["order","p_order"],["checkout","p_checkout"],["discount","p_discount"],["void","p_void"],["delete","p_delete"],["report","p_report"],["menu","p_menu"],["settings","p_settings"]];
   function can(p){ return !!(currentUser && (currentUser.owner || (currentUser.perms && currentUser.perms[p]))); }
@@ -845,10 +847,12 @@
   }
   function renderGrid(){
     let ps=products.filter(p=>p.active!==false);
-    if(filterCat!=="all")ps=ps.filter(p=>p.category_id===filterCat);
+    if(searchQuery)ps=ps.filter(p=>(p.name||"").toLowerCase().includes(searchQuery));
+    else if(filterCat!=="all")ps=ps.filter(p=>p.category_id===filterCat);
     const html=ps.length?ps.map(p=>`<button class="tile" data-id="${p.id}"><span class="tn">${esc(p.name)}</span><span class="tp">${money(p.price)}</span></button>`).join(""):`<div class="empty" style="grid-column:1/-1">${t("no_prod_sell")}</div>`;
     ["prodGrid","prodGrid2"].forEach(idn=>{ const g=$(idn); if(!g)return; g.innerHTML=html; g.querySelectorAll('.tile').forEach(el=>el.onclick=()=>tapProduct(el.dataset.id)); });
   }
+  $("prodSearch").oninput=()=>{ searchQuery=$("prodSearch").value.trim().toLowerCase(); renderGrid(); };
 
   function tapProduct(pid){ const p=products.find(x=>x.id===pid); if(!p)return; const gs=groupsForProduct(pid); if(gs.length) openOptions(p,gs); else addLine({key:p.id,product_id:p.id,name:p.name,price:Number(p.price),qty:1,options_text:null}); }
 
