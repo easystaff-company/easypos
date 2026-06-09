@@ -207,12 +207,15 @@
         <div class="collapse-h" id="openHdr"><span data-i18n="open_tables">开着的桌</span><span class="cnt" id="openCount"></span><span class="chev2">▾</span></div>
         <div id="openTables" class="hidden"></div>
       </div>
-      <div class="section-t" data-i18n="new_order">新点单</div>
+      <div class="section-t" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <span data-i18n="new_order">新点单</span>
+        <button id="cartJump" class="hidden" style="display:inline-flex;align-items:center;gap:6px;background:var(--gold);color:#1a1205;border:none;border-radius:999px;padding:6px 13px;font-weight:800;font-size:13px;text-transform:none;letter-spacing:0;cursor:pointer">🛒 <span id="cartJumpN">0</span></button>
+      </div>
       <div id="addBanner" class="hidden" style="background:rgba(230,180,80,.16);color:var(--gold);font-weight:700;padding:10px 12px;border-radius:10px;margin-bottom:12px;font-size:14px"></div>
       <input id="prodSearch" data-ph="search_ph" placeholder="搜索菜品…" autocomplete="off" style="margin-bottom:10px" />
       <div class="filter" id="catFilter2"></div>
       <div class="grid-prod" id="prodGrid2"></div>
-      <div class="section-t" data-i18n="cart">购物车</div>
+      <div class="section-t" id="cartAnchor" data-i18n="cart">购物车</div>
       <div id="cart2"></div>
       <div class="total-row"><span data-i18n="total">合计</span><b id="cartTotal2">€0.00</b></div>
       <div id="dineActions">
@@ -902,6 +905,7 @@
   }
   $("prodSearch").oninput=()=>{ searchQuery=$("prodSearch").value.trim().toLowerCase(); renderGrid(); };
   $("mProdSearch").oninput=()=>{ mProdSearch=$("mProdSearch").value.trim().toLowerCase(); renderProdList(); };
+  $("cartJump").onclick=()=>{ const a=$("cartAnchor"); if(a)a.scrollIntoView({behavior:"smooth",block:"start"}); };
 
   function tapProduct(pid){ const p=products.find(x=>x.id===pid); if(!p)return; const gs=groupsForProduct(pid); if(gs.length) openOptions(p,gs); else addLine({key:p.id,product_id:p.id,name:p.name,price:Number(p.price),qty:1,options_text:null}); }
 
@@ -948,6 +952,9 @@
     if($("dineQuickBtn"))$("dineQuickBtn").classList.toggle("hidden",!can('checkout'));
     if($("addToTableBtn"))$("addToTableBtn").disabled=empty;
     if(empty&&$("checkoutPanel"))$("checkoutPanel").classList.add("hidden");
+    const qty=cart.reduce((s,l)=>s+l.qty,0);
+    if($("cartJumpN"))$("cartJumpN").textContent=qty;
+    if($("cartJump"))$("cartJump").classList.toggle("hidden",empty);
   }
 
   async function loadToday(){
