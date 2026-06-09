@@ -55,6 +55,10 @@
   .tgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
   .ttile{background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:22px 10px;font-size:21px;font-weight:800;color:var(--ink);text-align:center}
   .ttile:active{background:rgba(230,180,80,.16);border-color:var(--gold);color:var(--gold)}
+  .collapse-h{display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:700;font-size:15px;color:var(--ink);padding:13px 14px;background:var(--soft);border-radius:11px;margin:6px 0 12px}
+  .collapse-h .cnt{color:var(--gold);font-weight:800}
+  .collapse-h .chev2{margin-left:auto;color:var(--muted);transition:transform .15s}
+  .collapse-h.open .chev2{transform:rotate(180deg)}
   .subseg{display:flex;gap:8px;margin:0 0 16px}
   .subseg button{flex:1;padding:9px;border-radius:10px;background:var(--soft);color:var(--muted);font-weight:700;font-size:14px}
   .subseg button.on{background:rgba(230,180,80,.16);color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}
@@ -161,35 +165,21 @@
   </div>
 
   <div class="card hidden" id="appView">
-    <div class="seg" style="position:relative"><button id="tabSell" class="on" data-i18n="tab_sell">收银</button><button id="tabDine" data-i18n="tab_dine">点菜</button><button id="tabOrders" data-i18n="tab_orders">订单</button><button id="moreBtn"><span data-i18n="more">更多</span> ▾</button><div id="moreMenu" class="dropdown hidden"><button data-go="report" data-i18n="tab_report">汇总</button><button data-go="menu" data-i18n="tab_menu">菜单</button><button data-go="settings" data-i18n="tab_settings">设置</button></div></div>
+    <div class="seg" style="position:relative"><button id="tabSell" class="on" data-i18n="tab_sell">收银</button><button id="tabDine" data-i18n="tab_dine">点菜</button><button id="tabOrders" data-i18n="tab_orders">订单</button><button id="moreBtn"><span data-i18n="more">更多</span> ▾</button><div id="moreMenu" class="dropdown hidden"><button data-go="report" data-i18n="tab_report">汇总</button><button data-go="menu" data-i18n="menu_settings">菜单设置</button><button data-go="settings" data-i18n="tab_settings">设置</button></div></div>
 
     <div id="sellTab">
       <div class="today" id="today"></div>
-      <div id="openTablesWrap2" class="hidden"><div class="section-t" data-i18n="open_tables">开着的桌</div><div id="openTables2" style="margin-bottom:6px"></div></div>
-      <div class="filter" id="catFilter"></div>
-      <div class="grid-prod" id="prodGrid"></div>
-      <div class="section-t" data-i18n="cart">购物车</div>
-      <div id="cart"></div>
-      <div class="total-row"><span data-i18n="total">合计</span><b id="cartTotal">€0.00</b></div>
-      <button class="btn" id="checkoutBtn" disabled data-i18n="checkout">结账</button>
-      <div id="checkoutPanel" class="hidden" style="margin-top:14px">
-        <div class="section-t" data-i18n="pay_method" style="margin-top:4px">付款方式</div>
-        <div class="seg"><button id="payCash" class="on" data-i18n="pay_cash">现金</button><button id="payCard" data-i18n="pay_card">刷卡</button></div>
-        <div class="total-row"><span data-i18n="total">合计</span><b id="coTotal">€0.00</b></div>
-        <div id="cashBox">
-          <label data-i18n="cash_received">收到现金 €</label>
-          <input id="cashInput" type="number" inputmode="decimal" step="0.01" placeholder="0.00" />
-          <div class="total-row"><span data-i18n="change">找零</span><b id="changeOut">€0.00</b></div>
-        </div>
-        <button class="btn ok" id="finishBtn" data-i18n="finish">完成收款</button>
-        <button class="btn ghost" id="cancelCheckout" style="width:100%;margin-top:10px;text-align:center" data-i18n="cancel">取消</button>
-        <div class="msg" id="payMsg"></div>
+      <div id="openBlock2" class="hidden">
+        <div class="collapse-h" id="openHdr2"><span data-i18n="open_tables">开着的桌</span><span class="cnt" id="openCount2"></span><span class="chev2">▾</span></div>
+        <div id="openTables2" class="hidden"></div>
       </div>
     </div>
 
     <div id="dineTab" class="hidden">
-      <div class="section-t" data-i18n="open_tables">开着的桌</div>
-      <div id="openTables"></div>
+      <div id="openBlock" class="hidden">
+        <div class="collapse-h" id="openHdr"><span data-i18n="open_tables">开着的桌</span><span class="cnt" id="openCount"></span><span class="chev2">▾</span></div>
+        <div id="openTables" class="hidden"></div>
+      </div>
       <div class="section-t" data-i18n="new_order">新点单</div>
       <div id="addBanner" class="hidden" style="background:rgba(230,180,80,.16);color:var(--gold);font-weight:700;padding:10px 12px;border-radius:10px;margin-bottom:12px;font-size:14px"></div>
       <div class="filter" id="catFilter2"></div>
@@ -395,7 +385,8 @@
     no_open_tables:{zh:"没有开着的桌",en:"No open tables",it:"Nessun tavolo aperto"},no_tables_set:{zh:"还没建桌位,去 设置→桌位",en:"No tables — add them in Settings→Tables",it:"Nessun tavolo — aggiungi in Impostazioni→Tavoli"},
     table_word:{zh:"桌",en:"Table",it:"Tavolo"},add_items:{zh:"加菜",en:"Add items",it:"Aggiungi"},add_to_table:{zh:"加到桌",en:"Add to table",it:"Aggiungi al tavolo"},cancel_add:{zh:"取消加菜",en:"Cancel",it:"Annulla"},
     adding_to:{zh:"正在加菜:",en:"Adding to: ",it:"Aggiungi a: "},
-    more:{zh:"更多",en:"More",it:"Altro"}
+    more:{zh:"更多",en:"More",it:"Altro"},
+    menu_settings:{zh:"菜单设置",en:"Menu setup",it:"Gestione menu"}
   };
 
   const $=(id)=>document.getElementById(id);
@@ -611,26 +602,6 @@
     if(empty&&$("checkoutPanel"))$("checkoutPanel").classList.add("hidden");
   }
 
-  let payMethod="cash";
-  function setPay(m){ payMethod=m; $("payCash").classList.toggle("on",m==="cash"); $("payCard").classList.toggle("on",m==="card"); $("cashBox").classList.toggle("hidden",m!=="cash"); }
-  $("payCash").onclick=()=>setPay("cash"); $("payCard").onclick=()=>setPay("card");
-  $("checkoutBtn").onclick=()=>{ hide($("payMsg")); setPay("cash"); $("checkoutPanel").classList.remove("hidden"); $("coTotal").textContent=money(cartTotal()); $("cashInput").value=""; $("changeOut").textContent=money(0); $("cashInput").focus(); };
-  $("cancelCheckout").onclick=()=>$("checkoutPanel").classList.add("hidden");
-  $("cashInput").oninput=()=>{ const ch=parseFloat($("cashInput").value)-cartTotal(); $("changeOut").textContent=money(isNaN(ch)?0:Math.max(0,ch)); };
-  $("finishBtn").onclick=async()=>{
-    hide($("payMsg")); const total=cartTotal(); let cash=null,change=null;
-    if(payMethod==="cash"){ cash=parseFloat($("cashInput").value); if(isNaN(cash)||cash<total){ show($("payMsg"),t("cash_short",{t:money(total)}),"err"); return; } change=+(cash-total).toFixed(2); }
-    const b=$("finishBtn"); b.disabled=true; b.textContent=t("saving"); const sid=storeId();
-    const {data:order,error}=await sb.from("orders").insert({store_id:sid,total:+total.toFixed(2),payment_method:payMethod,cash_received:cash,change_given:change,status:"completed"}).select().single();
-    if(error){ b.disabled=false; b.textContent=t("finish"); show($("payMsg"),t("save_fail")+error.message,"err"); return; }
-    const items=cart.map(l=>({order_id:order.id,product_id:l.product_id,name:l.name,price:l.price,qty:l.qty,line_total:+(l.price*l.qty).toFixed(2),options_text:l.options_text||null}));
-    const {error:e2}=await sb.from("order_items").insert(items);
-    b.disabled=false; b.textContent=t("finish");
-    if(e2){ show($("payMsg"),t("items_fail")+e2.message,"err"); return; }
-    cart=[]; renderCart(); $("checkoutPanel").classList.add("hidden"); await loadToday();
-    show($("payMsg"), payMethod==="cash"?t("done_change",{c:money(change)}):"✓ "+t("pay_card"),"ok"); setTimeout(()=>hide($("payMsg")),4000);
-  };
-
   async function loadToday(){
     const sid=storeId(); if(!sid){ $("today").innerHTML=""; return; }
     const start=new Date(); start.setHours(0,0,0,0);
@@ -773,17 +744,21 @@
     show($("notifyMsg"),t("test_sent"),"ok");
   };
 
+  function toggleOpenList(hdr,list){ const l=$(list); l.classList.toggle("hidden"); $(hdr).classList.toggle("open",!l.classList.contains("hidden")); }
+  $("openHdr").onclick=()=>toggleOpenList("openHdr","openTables");
+  $("openHdr2").onclick=()=>toggleOpenList("openHdr2","openTables2");
   let openOrders=[], curOpen=null, addingToOrder=null, payCtx=null, pmMethod2="cash";
   async function loadOpenTables(){
     const sid=storeId();
     const fill=(html)=>["openTables","openTables2"].forEach(idn=>{ const el=$(idn); if(el)el.innerHTML=html; });
     const attach=()=>["openTables","openTables2"].forEach(idn=>{ const el=$(idn); if(el)el.querySelectorAll('[data-open]').forEach(h=>h.onclick=()=>openTableDetail(h.dataset.open)); });
-    const wrap=$("openTablesWrap2");
-    if(!sid){ openOrders=[]; fill(""); if(wrap)wrap.classList.add("hidden"); return; }
+    if(!sid){ openOrders=[]; fill(""); ["openBlock","openBlock2"].forEach(idn=>{ const b=$(idn); if(b)b.classList.add("hidden"); }); return; }
     const {data,error}=await sb.from("orders").select("*, order_items(*), tables(name)").eq("store_id",sid).eq("status","open").order("created_at");
-    if(error){ fill(`<div class="empty">${esc(error.message)}</div>`); if(wrap)wrap.classList.add("hidden"); return; }
+    if(error){ fill(`<div class="empty">${esc(error.message)}</div>`); return; }
     openOrders=data||[];
-    if(wrap)wrap.classList.toggle("hidden",openOrders.length===0);
+    const n=openOrders.length;
+    if($("openCount"))$("openCount").textContent="· "+n; if($("openCount2"))$("openCount2").textContent="· "+n;
+    ["openBlock","openBlock2"].forEach(idn=>{ const b=$(idn); if(b)b.classList.toggle("hidden",n===0); });
     if(!openOrders.length){ fill(`<div class="empty">${t("no_open_tables")}</div>`); return; }
     const html=openOrders.map(o=>{
       const tot=(o.order_items||[]).reduce((s,i)=>s+Number(i.line_total),0);
