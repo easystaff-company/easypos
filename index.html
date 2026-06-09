@@ -316,7 +316,7 @@
       <button class="btn" id="repExportOrders" data-i18n="export_orders">导出订单 CSV</button>
       <button class="btn ghost" id="repExportItems" style="width:100%;margin-top:10px;text-align:center" data-i18n="export_items">导出菜品汇总 CSV</button>
     </div>
-    <button id="lockBtn" class="btn ghost hidden" style="width:100%;text-align:center;margin-top:24px;color:var(--muted)" data-i18n="lock_switch">锁定 / 换人</button>
+    <div style="text-align:right;margin-top:22px"><button id="lockBtn" class="btn ghost hidden" style="margin:0;padding:5px 11px;font-size:12px;font-weight:600;color:var(--muted)" data-i18n="lock_switch">锁定 / 换人</button></div>
   </div>
 </div>
 
@@ -832,12 +832,30 @@
       }).join("")):`<div class="attlbl">${t("no_groups")}</div>`;
       const attNames=groupsForProduct(p.id).map(g=>esc(g.name));
       const tagLine=attNames.length?`<div class="meta" style="color:var(--gold)">🏷 ${attNames.join(", ")}</div>`:"";
-      return `<div class="pwrap"><div class="item"><div class="iteminfo" data-exp="${p.id}"><div class="nm">${esc(p.name)}</div><div class="meta">${meta}</div>${tagLine}</div><div class="pr">${money(p.price)}</div><span class="x" data-prod="${p.id}">✕</span></div><div class="attach hidden" id="att-${p.id}">${att}</div></div>`;
+      const catOpts=`<option value="">${t("no_cat_opt")}</option>`+categories.map(c=>`<option value="${c.id}" ${p.category_id===c.id?"selected":""}>${esc(c.name)}</option>`).join("");
+      const unitOpts=`<option value="piece" ${p.unit!=="weight"?"selected":""}>${t("piece")}</option><option value="weight" ${p.unit==="weight"?"selected":""}>${t("weight")}</option>`;
+      const editForm=`<div class="row2"><input data-en="${p.id}" value="${esc(p.name)}" placeholder="${t('name')}"/><input data-ep="${p.id}" type="number" inputmode="decimal" step="0.01" value="${p.price}" placeholder="${t('price')}"/></div>
+        <div class="row2" style="margin-top:8px"><select data-ec="${p.id}">${catOpts}</select><select data-eu="${p.id}">${unitOpts}</select></div>
+        <button class="btn sm" data-saveprod="${p.id}" style="width:auto;margin-top:8px">${t("save_btn")}</button>`;
+      return `<div class="pwrap"><div class="item"><div class="iteminfo" data-exp="${p.id}"><div class="nm">${esc(p.name)}</div><div class="meta">${meta}</div>${tagLine}</div><div class="pr">${money(p.price)}</div><span class="x" data-prod="${p.id}">✕</span></div><div class="hidden" id="att-${p.id}" style="padding:10px 2px 4px;display:flex;flex-direction:column;gap:0">${editForm}<div class="attach" style="padding-top:10px">${att}</div></div></div>`;
     }).join(""):`<div class="empty">${t("no_prod")}</div>`;
     list.querySelectorAll('.iteminfo').forEach(el=>el.onclick=()=>$("att-"+el.dataset.exp).classList.toggle("hidden"));
     list.querySelectorAll('[data-prod]').forEach(x=>x.onclick=()=>delProduct(x.dataset.prod));
+    list.querySelectorAll('[data-saveprod]').forEach(b=>b.onclick=()=>saveProd(b.dataset.saveprod));
     list.querySelectorAll('.gchip').forEach(c=>c.onclick=()=>{ const [pid,gid]=c.dataset.pg.split("|"); toggleAttach(pid,gid); });
     renderGrid();
+  }
+  async function saveProd(id){
+    const nm=(document.querySelector(`[data-en="${id}"]`)||{}).value;
+    const prRaw=(document.querySelector(`[data-ep="${id}"]`)||{}).value;
+    const cat=(document.querySelector(`[data-ec="${id}"]`)||{}).value||null;
+    const un=(document.querySelector(`[data-eu="${id}"]`)||{}).value||"piece";
+    const name=(nm||"").trim(), price=parseFloat(prRaw);
+    if(!name){ alert(t("need_name")); return; }
+    if(isNaN(price)){ alert(t("need_price")); return; }
+    const {error}=await sb.from("products").update({name,price,category_id:cat,unit:un}).eq("id",id);
+    if(error){ alert(t("fail")+error.message); return; }
+    await loadProducts(); alert(t("saved_ok"));
   }
   async function toggleAttach(pid,gid){
     const exists=pmg.some(x=>x.product_id===pid&&x.group_id===gid);
