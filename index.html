@@ -764,11 +764,11 @@
   function toggleOpenList(hdr,list){ const l=$(list); l.classList.toggle("hidden"); $(hdr).classList.toggle("open",!l.classList.contains("hidden")); }
   $("openHdr").onclick=()=>toggleOpenList("openHdr","openTables");
   $("openHdr2").onclick=()=>toggleOpenList("openHdr2","openTables2");
-  let openOrders=[], curOpen=null, addingToOrder=null, payCtx=null, pmMethod2="cash";
+  let openOrders=[], curOpen=null, curCtx="dine", addingToOrder=null, payCtx=null, pmMethod2="cash";
   async function loadOpenTables(){
     const sid=storeId();
     const fill=(html)=>["openTables","openTables2"].forEach(idn=>{ const el=$(idn); if(el)el.innerHTML=html; });
-    const attach=()=>["openTables","openTables2"].forEach(idn=>{ const el=$(idn); if(el)el.querySelectorAll('[data-open]').forEach(h=>h.onclick=()=>openTableDetail(h.dataset.open)); });
+    const attach=()=>{ const map={openTables:"dine",openTables2:"sell"}; Object.keys(map).forEach(idn=>{ const el=$(idn); if(el)el.querySelectorAll('[data-open]').forEach(h=>h.onclick=()=>openTableDetail(h.dataset.open,map[idn])); }); };
     if(!sid){ openOrders=[]; fill(""); ["openBlock","openBlock2"].forEach(idn=>{ const b=$(idn); if(b)b.classList.add("hidden"); }); return; }
     const {data,error}=await sb.from("orders").select("*, order_items(*), tables(name)").eq("store_id",sid).eq("status","open").order("created_at");
     if(error){ fill(`<div class="empty">${esc(error.message)}</div>`); return; }
@@ -786,8 +786,11 @@
     fill(html); attach();
   }
   function orderTotal(o){ return (o.order_items||[]).reduce((s,i)=>s+Number(i.line_total),0); }
-  function openTableDetail(id){
+  function openTableDetail(id,ctx){
+    if(ctx)curCtx=ctx;
     const o=openOrders.find(x=>x.id===id); if(!o)return; curOpen=o;
+    $("tmSettle").classList.toggle("hidden",curCtx==="dine");
+    $("tmDelete").classList.toggle("hidden",curCtx==="sell");
     $("tmTitle").textContent=t("table_word")+" "+(o.tables?o.tables.name:"—");
     $("tmItems").innerHTML=(o.order_items||[]).map(i=>`<div class="rline"><span>${esc(i.name)}${i.options_text?` (${esc(i.options_text)})`:""} ×${i.qty}</span><span class="rline-r">${money(i.line_total)} <span class="voidbtn" data-iid="${i.id}" data-nm="${esc(i.name)}" data-amt="${i.line_total}" data-qty="${i.qty}" data-opt="${esc(i.options_text||'')}">${t("void_btn")}</span></span></div>`).join("")||`<div class="empty">—</div>`;
     $("tmTotal").textContent=money(orderTotal(o));
