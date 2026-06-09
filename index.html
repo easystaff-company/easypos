@@ -24,6 +24,9 @@
   .langbar{display:flex;gap:6px}
   .langbar button{background:var(--soft);color:var(--muted);border-radius:9px;padding:7px 11px;font-size:13px;font-weight:700;border:none;cursor:pointer}
   .langbar button.on{background:linear-gradient(180deg,var(--gold),var(--gold2));color:#1a1a1e}
+  .gear{background:var(--soft);color:var(--gold);border-radius:10px;width:38px;height:38px;display:grid;place-items:center;flex:none}
+  .gear:active{transform:translateY(1px)}
+  .gear.on{background:linear-gradient(180deg,var(--gold),var(--gold2));color:#1a1a1e}
   .card{background:var(--card);border:1px solid #23232b;border-radius:var(--r);padding:20px 16px;margin-bottom:16px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
   h1{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:24px;margin-bottom:4px}
   .sub{color:var(--muted);font-size:14px;margin-bottom:18px}
@@ -155,7 +158,11 @@
 
   <div class="appbar">
     <img class="logo-wordmark" src="wordmark.png" alt="easypos" />
-    <div class="langbar"><button data-lang="zh">中</button><button data-lang="en">EN</button><button data-lang="it">IT</button></div>
+    <div style="display:flex;align-items:center;gap:10px;position:relative">
+      <button id="gearBtn" class="gear hidden" aria-label="admin"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+      <div class="langbar"><button data-lang="zh">中</button><button data-lang="en">EN</button><button data-lang="it">IT</button></div>
+      <div id="adminMenu" class="dropdown hidden"><button data-go="report" data-i18n="tab_report">汇总</button><button data-go="menu" data-i18n="menu_settings">菜单设置</button><button data-go="settings" data-i18n="tab_settings">设置</button></div>
+    </div>
   </div>
 
   <div class="card hidden" id="cfgView"><div class="cfgwarn" data-i18n="cfg_warn">还没读到 Supabase 配置。</div></div>
@@ -169,7 +176,7 @@
   </div>
 
   <div class="card hidden" id="appView">
-    <div class="seg" style="position:relative"><button id="tabSell" class="on" data-i18n="tab_sell">收银</button><button id="tabDine" data-i18n="tab_dine">点菜</button><button id="tabOrders" data-i18n="tab_orders">订单</button><button id="moreBtn"><span data-i18n="more">更多</span> ▾</button><div id="moreMenu" class="dropdown hidden"><button data-go="report" data-i18n="tab_report">汇总</button><button data-go="menu" data-i18n="menu_settings">菜单设置</button><button data-go="settings" data-i18n="tab_settings">设置</button></div></div>
+    <div class="seg"><button id="tabSell" class="on" data-i18n="tab_sell">收银</button><button id="tabDine" data-i18n="tab_dine">点菜</button><button id="tabOrders" data-i18n="tab_orders">订单</button></div>
 
     <div id="sellTab">
       <div class="today" id="today"></div>
@@ -266,7 +273,12 @@
 
       <div id="setAccount" class="hidden">
         <div class="who" style="font-size:15px;margin-bottom:16px"><span data-i18n="account">账户:</span> <b id="userEmail">—</b></div>
-        <button class="btn ghost" id="logoutBtn" style="width:100%;text-align:center" data-i18n="logout">退出</button>
+        <div class="section-t" data-i18n="admin_pin_t">管理 PIN</div>
+        <div class="sub" id="pinState" style="font-size:13px;margin-bottom:8px"></div>
+        <input id="setPinInput" type="password" inputmode="numeric" autocomplete="off" data-ph="admin_pin_hint" placeholder="4–6 位数字,留空=取消" />
+        <button class="btn" id="savePinBtn" data-i18n="save_pin">保存 PIN</button>
+        <div class="msg" id="pinSaveMsg"></div>
+        <button class="btn ghost" id="logoutBtn" style="width:100%;text-align:center;margin-top:18px" data-i18n="logout">退出</button>
       </div>
     </div>
 
@@ -358,6 +370,15 @@
   </div>
 </div>
 
+<div id="pinModal" class="modal hidden">
+  <div class="sheet">
+    <div class="sheet-h"><b data-i18n="pin_title">输入管理 PIN</b><span class="x" id="pinClose">✕</span></div>
+    <input id="pinInput" type="password" inputmode="numeric" autocomplete="off" placeholder="••••" style="text-align:center;letter-spacing:10px;font-size:22px;margin-top:8px" />
+    <button class="btn" id="pinConfirm" data-i18n="confirm_btn">确认</button>
+    <div class="msg" id="pinMsg"></div>
+  </div>
+</div>
+
 <script>
   const I18N={
     cfg_warn:{zh:"还没读到 Supabase 配置。请确认 config.js 和 index.html 在同一文件夹并填了值。",en:"Supabase config not found. Make sure config.js is next to index.html and filled in.",it:"Configurazione Supabase non trovata."},
@@ -443,7 +464,15 @@
     no_free_table:{zh:"没有其他桌位",en:"No other tables",it:"Nessun altro tavolo"},
     no_other_open:{zh:"没有其他开着的桌",en:"No other open tables",it:"Nessun altro tavolo aperto"},
     move_occupied_confirm:{zh:"目标桌已开台,把这桌并过去吗?",en:"Target table is busy — merge this one into it?",it:"Tavolo occupato — unire questo a quello?"},
-    merge_confirm:{zh:"把「{b}」的菜并到「{a}」吗?",en:"Merge “{b}” into “{a}”?",it:"Unire “{b}” in “{a}”?"}
+    merge_confirm:{zh:"把「{b}」的菜并到「{a}」吗?",en:"Merge “{b}” into “{a}”?",it:"Unire “{b}” in “{a}”?"},
+    pin_title:{zh:"输入管理 PIN",en:"Enter admin PIN",it:"Inserisci PIN admin"},
+    pin_wrong:{zh:"PIN 不对",en:"Wrong PIN",it:"PIN errato"},
+    pin_format:{zh:"请输入 4–6 位数字",en:"Enter 4–6 digits",it:"Inserisci 4–6 cifre"},
+    admin_pin_t:{zh:"管理 PIN",en:"Admin PIN",it:"PIN admin"},
+    admin_pin_hint:{zh:"4–6 位数字,留空=取消",en:"4–6 digits, blank to remove",it:"4–6 cifre, vuoto per rimuovere"},
+    save_pin:{zh:"保存 PIN",en:"Save PIN",it:"Salva PIN"},
+    pin_set:{zh:"已设置 ✓ 进汇总/菜单/设置需要 PIN",en:"Set ✓ — admin needs PIN",it:"Impostato ✓ — serve il PIN"},
+    pin_none:{zh:"未设置(齿轮当前不锁)",en:"Not set (gear unlocked)",it:"Non impostato (sbloccato)"}
   };
 
   const $=(id)=>document.getElementById(id);
@@ -468,6 +497,7 @@
   const deltaFmt=(d)=>d>0?("+"+money(d)):d<0?("−"+money(Math.abs(d))):money(0);
   const unitLabel=(u)=>t(u==="weight"?"weight":"piece");
   function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+  async function sha256hex(s){ const buf=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(String(s))); return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,"0")).join(""); }
 
   applyI18n();
   if(!window.SUPA_URL||!window.SUPA_KEY||window.SUPA_URL.includes("你的")||window.SUPA_KEY.includes("你的")){ $("cfgView").classList.remove("hidden"); throw new Error("config missing"); }
@@ -478,8 +508,8 @@
 
   async function render(){
     const {data:{session}}=await sb.auth.getSession();
-    if(session){ $("loginView").classList.add("hidden"); $("appView").classList.remove("hidden"); $("userEmail").textContent=session.user.email; await loadStores(); loadNotifyConfig(); }
-    else { $("appView").classList.add("hidden"); $("loginView").classList.remove("hidden"); }
+    if(session){ $("loginView").classList.add("hidden"); $("appView").classList.remove("hidden"); $("gearBtn").classList.remove("hidden"); $("userEmail").textContent=session.user.email; await loadStores(); loadNotifyConfig(); }
+    else { $("appView").classList.add("hidden"); $("loginView").classList.remove("hidden"); $("gearBtn").classList.add("hidden"); $("adminMenu").classList.add("hidden"); }
   }
   $("loginBtn").onclick=async()=>{
     hide($("loginMsg")); const b=$("loginBtn"); b.disabled=true; b.textContent=t("logging_in");
@@ -490,16 +520,45 @@
   $("logoutBtn").onclick=async()=>{await sb.auth.signOut(); render();};
 
   $("tabSell").onclick=()=>switchTab("sell"); $("tabDine").onclick=()=>switchTab("dine"); $("tabOrders").onclick=()=>switchTab("orders");
-  $("moreBtn").onclick=(e)=>{ e.stopPropagation(); $("moreMenu").classList.toggle("hidden"); };
-  $("moreMenu").querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>switchTab(b.dataset.go));
-  document.addEventListener('click',(e)=>{ if(!$("moreMenu").classList.contains("hidden") && !$("moreBtn").contains(e.target) && !e.target.closest('#moreMenu')) $("moreMenu").classList.add("hidden"); });
+  function curStore(){ return stores.find(s=>s.id===storeId()); }
+  function openAdminMenu(){ $("adminMenu").classList.remove("hidden"); }
+  $("gearBtn").onclick=(e)=>{
+    e.stopPropagation();
+    if(!$("adminMenu").classList.contains("hidden")){ $("adminMenu").classList.add("hidden"); return; }
+    const st=curStore();
+    if(st && st.admin_pin){ openPin(); } else { openAdminMenu(); }
+  };
+  $("adminMenu").querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{ $("adminMenu").classList.add("hidden"); switchTab(b.dataset.go); });
+  document.addEventListener('click',(e)=>{ if(!$("adminMenu").classList.contains("hidden") && !$("gearBtn").contains(e.target) && !e.target.closest('#adminMenu')) $("adminMenu").classList.add("hidden"); });
+  function openPin(){ $("pinInput").value=""; hide($("pinMsg")); $("pinModal").classList.remove("hidden"); setTimeout(()=>$("pinInput").focus(),60); }
+  $("pinClose").onclick=()=>$("pinModal").classList.add("hidden");
+  $("pinModal").onclick=(e)=>{ if(e.target===$("pinModal"))$("pinModal").classList.add("hidden"); };
+  $("pinConfirm").onclick=async()=>{
+    const st=curStore(); if(!st)return;
+    const h=await sha256hex($("pinInput").value);
+    if(h===st.admin_pin){ $("pinModal").classList.add("hidden"); openAdminMenu(); }
+    else { show($("pinMsg"),t("pin_wrong"),"err"); $("pinInput").value=""; $("pinInput").focus(); }
+  };
+  $("pinInput").addEventListener("keydown",e=>{ if(e.key==="Enter")$("pinConfirm").onclick(); });
+  $("savePinBtn").onclick=async()=>{
+    hide($("pinSaveMsg")); const st=curStore(); if(!st){ show($("pinSaveMsg"),t("need_store"),"err"); return; }
+    const v=$("setPinInput").value.trim(); let hash=null;
+    if(v){ if(!/^\d{4,6}$/.test(v)){ show($("pinSaveMsg"),t("pin_format"),"err"); return; } hash=await sha256hex(v); }
+    const b=$("savePinBtn"); b.disabled=true; b.textContent=t("adding");
+    const {error}=await sb.from("stores").update({admin_pin:hash}).eq("id",st.id);
+    b.disabled=false; b.textContent=t("save_pin");
+    if(error){ show($("pinSaveMsg"),t("fail")+error.message,"err"); return; }
+    st.admin_pin=hash; $("setPinInput").value=""; updatePinState(); show($("pinSaveMsg"),t("saved_ok"),"ok");
+  };
+  function updatePinState(){ const st=curStore(); if($("pinState"))$("pinState").textContent=(st&&st.admin_pin)?t("pin_set"):t("pin_none"); }
   function switchTab(tab){
     const panes={sell:"sellTab",dine:"dineTab",orders:"ordersTab",report:"reportTab",menu:"menuTab",settings:"settingsTab"};
     for(const k in panes)$(panes[k]).classList.toggle("hidden",k!==tab);
     $("tabSell").classList.toggle("on",tab==="sell"); $("tabDine").classList.toggle("on",tab==="dine"); $("tabOrders").classList.toggle("on",tab==="orders");
-    $("moreBtn").classList.toggle("on",["report","menu","settings"].includes(tab));
-    $("moreMenu").querySelectorAll('[data-go]').forEach(b=>b.classList.toggle("on",b.dataset.go===tab));
-    $("moreMenu").classList.add("hidden");
+    $("moreBtn") && $("moreBtn").classList.toggle("on",["report","menu","settings"].includes(tab));
+    $("gearBtn").classList.toggle("on",["report","menu","settings"].includes(tab));
+    $("adminMenu").querySelectorAll('[data-go]').forEach(b=>b.classList.toggle("on",b.dataset.go===tab));
+    $("adminMenu").classList.add("hidden");
     if(tab==="orders")loadOrders();
     if(tab==="report")loadReport();
     if(tab==="dine"){ renderFilter(); renderGrid(); renderCart(); loadOpenTables(); }
@@ -513,6 +572,7 @@
   function showSetSub(w){
     $("ssStore").classList.toggle("on",w==="store"); $("ssTables").classList.toggle("on",w==="tables"); $("ssNotify").classList.toggle("on",w==="notify"); $("ssAccount").classList.toggle("on",w==="account");
     $("setStore").classList.toggle("hidden",w!=="store"); $("setTables").classList.toggle("hidden",w!=="tables"); $("setNotify").classList.toggle("hidden",w!=="notify"); $("setAccount").classList.toggle("hidden",w!=="account");
+    if(w==="account")updatePinState();
   }
   $("ssStore").onclick=()=>showSetSub("store"); $("ssTables").onclick=()=>showSetSub("tables"); $("ssNotify").onclick=()=>showSetSub("notify"); $("ssAccount").onclick=()=>showSetSub("account");
 
