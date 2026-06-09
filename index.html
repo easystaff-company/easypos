@@ -403,7 +403,7 @@
     menu_settings:{zh:"菜单设置",en:"Menu setup",it:"Gestione menu"},
     already_open_confirm:{zh:"已经开台了,把这些菜加到这桌吗?",en:"is already open. Add these items to it?",it:"è già aperto. Aggiungere questi articoli?"},
     void_btn:{zh:"撤",en:"Void",it:"Storna"},void_item:{zh:"撤菜",en:"Void item",it:"Storna articolo"},del_order:{zh:"删除整单",en:"Delete order",it:"Elimina ordine"},
-    reason_ph:{zh:"原因…",en:"Reason…",it:"Motivo…"},confirm_btn:{zh:"确认",en:"Confirm",it:"Conferma"}
+    reason_ph:{zh:"原因(可选)…",en:"Reason (optional)…",it:"Motivo (facoltativo)…"},confirm_btn:{zh:"确认",en:"Confirm",it:"Conferma"}
   };
 
   const $=(id)=>document.getElementById(id);
@@ -798,7 +798,7 @@
   function askReason(title,sub,cb){ $("rsTitle").textContent=title; $("rsSub").textContent=sub||""; $("rsNote").value=""; reasonCb=cb; $("reasonModal").classList.remove("hidden"); setTimeout(()=>$("rsNote").focus(),60); }
   $("rsClose").onclick=()=>$("reasonModal").classList.add("hidden");
   $("reasonModal").onclick=(e)=>{ if(e.target===$("reasonModal"))$("reasonModal").classList.add("hidden"); };
-  $("rsConfirm").onclick=()=>{ const note=$("rsNote").value.trim(); if(!note){ $("rsNote").focus(); return; } $("reasonModal").classList.add("hidden"); const cb=reasonCb; reasonCb=null; if(cb)cb(note); };
+  $("rsConfirm").onclick=()=>{ const note=$("rsNote").value.trim(); $("reasonModal").classList.add("hidden"); const cb=reasonCb; reasonCb=null; if(cb)cb(note); };
   function voidItem(o,d){
     const label=d.nm+(d.opt?` (${d.opt})`:"")+" ×"+d.qty;
     askReason(t("void_item"),label,async(note)=>{
@@ -806,10 +806,11 @@
       if(error){ alert(t("fail")+error.message); return; }
       const newTotal=Math.max(0,Number(o.total||0)-Number(d.amt));
       await sb.from("orders").update({total:+newTotal.toFixed(2)}).eq("id",o.id);
-      await sb.from("audit_log").insert({store_id:storeId(),action:t("void_item")+" · "+t("table_word")+" "+(o.tables?o.tables.name:"—"),detail:label+" — "+note,amount:Number(d.amt)});
+      await sb.from("audit_log").insert({store_id:storeId(),action:t("void_item")+" · "+t("table_word")+" "+(o.tables?o.tables.name:"—"),detail:label+(note?(" — "+note):""),amount:Number(d.amt)});
       await loadOpenTables();
       const fresh=openOrders.find(x=>x.id===o.id);
-      if(fresh)openTableDetail(fresh.id); else $("tblModal").classList.add("hidden");
+      if(fresh && (fresh.order_items||[]).length){ openTableDetail(fresh.id); }
+      else { if(fresh){ await sb.from("orders").delete().eq("id",o.id); } $("tblModal").classList.add("hidden"); loadOpenTables(); }
     });
   }
   $("tmDelete").onclick=()=>{
@@ -818,7 +819,7 @@
       await sb.from("order_items").delete().eq("order_id",o.id);
       const {error}=await sb.from("orders").delete().eq("id",o.id);
       if(error){ alert(t("fail")+error.message); return; }
-      await sb.from("audit_log").insert({store_id:storeId(),action:t("del_order")+" · "+t("table_word")+" "+tname,detail:note,amount:tot});
+      await sb.from("audit_log").insert({store_id:storeId(),action:t("del_order")+" · "+t("table_word")+" "+tname,detail:note||null,amount:tot});
       $("tblModal").classList.add("hidden"); loadOpenTables();
     });
   };
