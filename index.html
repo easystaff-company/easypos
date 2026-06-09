@@ -247,7 +247,9 @@
         <label data-i18n="cat">分类</label><select id="pCat"></select>
         <button class="btn" id="addProdBtn" data-i18n="add_prod">添加菜品</button>
         <div class="msg" id="menuMsg"></div>
-        <div id="prodList" style="margin-top:14px"></div>
+        <input id="mProdSearch" data-ph="search_ph" placeholder="搜索菜品…" autocomplete="off" style="margin-top:14px;margin-bottom:8px" />
+        <div class="filter" id="mCatFilter" style="margin-bottom:4px"></div>
+        <div id="prodList" style="margin-top:8px"></div>
       </div>
 
       <div id="menuMod" class="hidden">
@@ -518,6 +520,7 @@
     lock_switch:{zh:"锁定 / 换人",en:"Lock / switch",it:"Blocca / cambia"},
     lock_confirm:{zh:"锁定并切换用户?需要重新登录。",en:"Lock and switch user? You'll need to log in again.",it:"Bloccare e cambiare utente? Dovrai riaccedere."},
     search_ph:{zh:"搜索菜品…",en:"Search items…",it:"Cerca prodotti…"},
+    init_retry:{zh:"加载失败,可能是网络问题。请重新登录或刷新页面再试。",en:"Loading failed, likely a network issue. Please log in again or refresh.",it:"Caricamento fallito, probabilmente di rete. Accedi di nuovo o aggiorna."},
     pick_user:{zh:"选择用户",en:"Select user",it:"Seleziona utente"},
     set_users:{zh:"用户",en:"Users",it:"Utenti"},
     user_name:{zh:"用户名",en:"User name",it:"Nome utente"},
@@ -585,15 +588,29 @@
   const sb=supabase.createClient(window.SUPA_URL,window.SUPA_KEY);
   let stores=[], categories=[], products=[], groups=[], pmg=[], tables=[], cart=[], filterCat="all", searchQuery="";
   let users=[], currentUser=null;
+  let mProdSearch="", mCatFilter="all";
   const PERMS=[["order","p_order"],["checkout","p_checkout"],["discount","p_discount"],["void","p_void"],["delete","p_delete"],["report","p_report"],["menu","p_menu"],["settings","p_settings"]];
   function can(p){ return !!(currentUser && (currentUser.owner || (currentUser.perms && currentUser.perms[p]))); }
   const storeId=()=>$("storeSel").value||null;
   function groupsForProduct(pid){ const ids=pmg.filter(x=>x.product_id===pid).map(x=>x.group_id); return groups.filter(g=>ids.includes(g.id)); }
 
+  function showLoginScreen(){ currentUser=null; $("appView").classList.add("hidden"); $("userSelectView").classList.add("hidden"); $("loginView").classList.remove("hidden"); $("gearBtn").classList.add("hidden"); $("adminMenu").classList.add("hidden"); $("userBar").classList.add("hidden"); $("lockBtn").classList.add("hidden"); }
   async function render(){
-    const {data:{session}}=await sb.auth.getSession();
-    if(session){ $("loginView").classList.add("hidden"); $("userEmail").textContent=session.user.email; await loadStores(); loadNotifyConfig(); enterAfterLogin(); }
-    else { currentUser=null; $("appView").classList.add("hidden"); $("userSelectView").classList.add("hidden"); $("loginView").classList.remove("hidden"); $("gearBtn").classList.add("hidden"); $("adminMenu").classList.add("hidden"); $("userBar").classList.add("hidden"); }
+    let session=null;
+    try{ const r=await sb.auth.getSession(); session=(r&&r.data)?r.data.session:null; }
+    catch(e){ console.error("getSession failed",e); }
+    if(!session){ showLoginScreen(); return; }
+    try{
+      $("userEmail").textContent=session.user.email;
+      await loadStores();
+      loadNotifyConfig();
+      $("loginView").classList.add("hidden");
+      enterAfterLogin();
+    }catch(e){
+      console.error("init failed",e);
+      showLoginScreen();
+      alert(t("init_retry"));
+    }
   }
   function gateActive(){ return users.length>0; }
   function setOwner(){ currentUser={owner:true,name:t("owner"),perms:{}}; }
@@ -823,8 +840,22 @@
     const sid=storeId(); if(!sid)return;
     const {data,error}=await sb.from("products").select("*, categories(name)").eq("store_id",sid).order("created_at");
     products=error?[]:(data||[]);
-    const list=$("prodList");
-    list.innerHTML=products.length?products.map(p=>{
+    renderMgmtFilter();
+    renderProdList();
+    renderGrid();
+  }
+  function renderMgmtFilter(){
+    const el=$("mCatFilter"); if(!el)return;
+    const html=`<span class="fchip ${mCatFilter==='all'?'on':''}" data-mc="all">${t("all")}</span>`+categories.map(c=>`<span class="fchip ${mCatFilter===c.id?'on':''}" data-mc="${c.id}">${esc(c.name)}</span>`).join("");
+    el.innerHTML=html;
+    el.querySelectorAll('.fchip').forEach(ch=>ch.onclick=()=>{ mCatFilter=ch.dataset.mc; renderMgmtFilter(); renderProdList(); });
+  }
+  function renderProdList(){
+    const list=$("prodList"); if(!list)return;
+    let ps=products.slice();
+    if(mProdSearch)ps=ps.filter(p=>(p.name||"").toLowerCase().includes(mProdSearch));
+    else if(mCatFilter!=="all")ps=ps.filter(p=>p.category_id===mCatFilter);
+    list.innerHTML=ps.length?ps.map(p=>{
       const meta=[p.categories?.name,unitLabel(p.unit)].filter(Boolean).map(esc).join(" · ");
       const att=groups.length?(`<div class="attlbl">${t("attach_groups")}</div>`+groups.map(g=>{
         const on=pmg.some(x=>x.product_id===p.id&&x.group_id===g.id);
@@ -843,7 +874,6 @@
     list.querySelectorAll('[data-prod]').forEach(x=>x.onclick=()=>delProduct(x.dataset.prod));
     list.querySelectorAll('[data-saveprod]').forEach(b=>b.onclick=()=>saveProd(b.dataset.saveprod));
     list.querySelectorAll('.gchip').forEach(c=>c.onclick=()=>{ const [pid,gid]=c.dataset.pg.split("|"); toggleAttach(pid,gid); });
-    renderGrid();
   }
   async function saveProd(id){
     const nm=(document.querySelector(`[data-en="${id}"]`)||{}).value;
@@ -871,6 +901,7 @@
     ["prodGrid","prodGrid2"].forEach(idn=>{ const g=$(idn); if(!g)return; g.innerHTML=html; g.querySelectorAll('.tile').forEach(el=>el.onclick=()=>tapProduct(el.dataset.id)); });
   }
   $("prodSearch").oninput=()=>{ searchQuery=$("prodSearch").value.trim().toLowerCase(); renderGrid(); };
+  $("mProdSearch").oninput=()=>{ mProdSearch=$("mProdSearch").value.trim().toLowerCase(); renderProdList(); };
 
   function tapProduct(pid){ const p=products.find(x=>x.id===pid); if(!p)return; const gs=groupsForProduct(pid); if(gs.length) openOptions(p,gs); else addLine({key:p.id,product_id:p.id,name:p.name,price:Number(p.price),qty:1,options_text:null}); }
 
