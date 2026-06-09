@@ -165,6 +165,7 @@
 
     <div id="sellTab">
       <div class="today" id="today"></div>
+      <div id="openTablesWrap2" class="hidden"><div class="section-t" data-i18n="open_tables">开着的桌</div><div id="openTables2" style="margin-bottom:6px"></div></div>
       <div class="filter" id="catFilter"></div>
       <div class="grid-prod" id="prodGrid"></div>
       <div class="section-t" data-i18n="cart">购物车</div>
@@ -454,6 +455,7 @@
     if(tab==="orders")loadOrders();
     if(tab==="report")loadReport();
     if(tab==="dine"){ renderFilter(); renderGrid(); renderCart(); loadOpenTables(); }
+    if(tab==="sell")loadOpenTables();
   }
   function showMenuSub(w){
     $("smCat").classList.toggle("on",w==="cat"); $("smProd").classList.toggle("on",w==="prod"); $("smMod").classList.toggle("on",w==="mod");
@@ -475,7 +477,7 @@
     await reloadStore();
   }
   $("storeSel").onchange=reloadStore;
-  async function reloadStore(){ cart=[]; renderCart(); await loadCategories(); await loadGroups(); await loadPmg(); await loadProducts(); await loadTables(); await loadToday(); }
+  async function reloadStore(){ cart=[]; renderCart(); await loadCategories(); await loadGroups(); await loadPmg(); await loadProducts(); await loadTables(); await loadToday(); loadOpenTables(); }
 
   async function loadCategories(){
     const sid=storeId(); if(!sid)return;
@@ -773,18 +775,23 @@
 
   let openOrders=[], curOpen=null, addingToOrder=null, payCtx=null, pmMethod2="cash";
   async function loadOpenTables(){
-    const sid=storeId(); const el=$("openTables"); if(!sid){ openOrders=[]; if(el)el.innerHTML=""; return; }
+    const sid=storeId();
+    const fill=(html)=>["openTables","openTables2"].forEach(idn=>{ const el=$(idn); if(el)el.innerHTML=html; });
+    const attach=()=>["openTables","openTables2"].forEach(idn=>{ const el=$(idn); if(el)el.querySelectorAll('[data-open]').forEach(h=>h.onclick=()=>openTableDetail(h.dataset.open)); });
+    const wrap=$("openTablesWrap2");
+    if(!sid){ openOrders=[]; fill(""); if(wrap)wrap.classList.add("hidden"); return; }
     const {data,error}=await sb.from("orders").select("*, order_items(*), tables(name)").eq("store_id",sid).eq("status","open").order("created_at");
-    if(error){ el.innerHTML=`<div class="empty">${esc(error.message)}</div>`; return; }
+    if(error){ fill(`<div class="empty">${esc(error.message)}</div>`); if(wrap)wrap.classList.add("hidden"); return; }
     openOrders=data||[];
-    if(!openOrders.length){ el.innerHTML=`<div class="empty">${t("no_open_tables")}</div>`; return; }
-    el.innerHTML=openOrders.map(o=>{
+    if(wrap)wrap.classList.toggle("hidden",openOrders.length===0);
+    if(!openOrders.length){ fill(`<div class="empty">${t("no_open_tables")}</div>`); return; }
+    const html=openOrders.map(o=>{
       const tot=(o.order_items||[]).reduce((s,i)=>s+Number(i.line_total),0);
       const n=(o.order_items||[]).reduce((s,i)=>s+Number(i.qty),0);
       const tname=o.tables?o.tables.name:"—";
       return `<div class="order"><div class="ohead" data-open="${o.id}"><div><div class="nm">${t("table_word")} ${esc(tname)}</div><div class="meta">${money(tot)} · ${n} ${t("items_word")}</div></div><span class="chev">▸</span></div></div>`;
     }).join("");
-    el.querySelectorAll('[data-open]').forEach(h=>h.onclick=()=>openTableDetail(h.dataset.open));
+    fill(html); attach();
   }
   function orderTotal(o){ return (o.order_items||[]).reduce((s,i)=>s+Number(i.line_total),0); }
   function openTableDetail(id){
