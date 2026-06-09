@@ -52,6 +52,9 @@
   .dropdown button{text-align:left;background:transparent;color:var(--ink);font-weight:700;font-size:15px;padding:12px;border-radius:9px}
   .dropdown button:active{background:var(--soft)}
   .dropdown button.on{color:var(--gold);background:rgba(230,180,80,.12)}
+  .tgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .ttile{background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:22px 10px;font-size:21px;font-weight:800;color:var(--ink);text-align:center}
+  .ttile:active{background:rgba(230,180,80,.16);border-color:var(--gold);color:var(--gold)}
   .subseg{display:flex;gap:8px;margin:0 0 16px}
   .subseg button{flex:1;padding:9px;border-radius:10px;background:var(--soft);color:var(--muted);font-weight:700;font-size:14px}
   .subseg button.on{background:rgba(230,180,80,.16);color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}
@@ -299,7 +302,7 @@
 <div id="tblPickModal" class="modal hidden">
   <div class="sheet">
     <div class="sheet-h"><b data-i18n="choose_table">选桌号</b><span class="x" id="tpClose">✕</span></div>
-    <div class="chips" id="tblPickList" style="margin-top:6px"></div>
+    <div class="tgrid" id="tblPickList" style="margin-top:6px"></div>
   </div>
 </div>
 
@@ -539,7 +542,9 @@
         const on=pmg.some(x=>x.product_id===p.id&&x.group_id===g.id);
         return `<span class="gchip ${on?'on':''}" data-pg="${p.id}|${g.id}">${esc(g.name)}</span>`;
       }).join("")):`<div class="attlbl">${t("no_groups")}</div>`;
-      return `<div class="pwrap"><div class="item"><div class="iteminfo" data-exp="${p.id}"><div class="nm">${esc(p.name)}</div><div class="meta">${meta}</div></div><div class="pr">${money(p.price)}</div><span class="x" data-prod="${p.id}">✕</span></div><div class="attach hidden" id="att-${p.id}">${att}</div></div>`;
+      const attNames=groupsForProduct(p.id).map(g=>esc(g.name));
+      const tagLine=attNames.length?`<div class="meta" style="color:var(--gold)">🏷 ${attNames.join(", ")}</div>`:"";
+      return `<div class="pwrap"><div class="item"><div class="iteminfo" data-exp="${p.id}"><div class="nm">${esc(p.name)}</div><div class="meta">${meta}</div>${tagLine}</div><div class="pr">${money(p.price)}</div><span class="x" data-prod="${p.id}">✕</span></div><div class="attach hidden" id="att-${p.id}">${att}</div></div>`;
     }).join(""):`<div class="empty">${t("no_prod")}</div>`;
     list.querySelectorAll('.iteminfo').forEach(el=>el.onclick=()=>$("att-"+el.dataset.exp).classList.toggle("hidden"));
     list.querySelectorAll('[data-prod]').forEach(x=>x.onclick=()=>delProduct(x.dataset.prod));
@@ -815,7 +820,7 @@
   $("openTableBtn").onclick=()=>{
     if(!cart.length)return;
     if(!tables.length){ alert(t("no_tables_set")); return; }
-    $("tblPickList").innerHTML=tables.map(tb=>`<span class="fchip" data-pick="${tb.id}">${esc(tb.name)}</span>`).join("");
+    $("tblPickList").innerHTML=tables.map(tb=>`<button class="ttile" data-pick="${tb.id}">${esc(tb.name)}</button>`).join("");
     $("tblPickList").querySelectorAll('[data-pick]').forEach(c=>c.onclick=()=>openTableWith(c.dataset.pick));
     $("tblPickModal").classList.remove("hidden");
   };
