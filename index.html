@@ -497,8 +497,8 @@
     admin_pin_t:{zh:"管理 PIN",en:"Admin PIN",it:"PIN admin"},
     admin_pin_hint:{zh:"4–6 位数字,留空=取消",en:"4–6 digits, blank to remove",it:"4–6 cifre, vuoto per rimuovere"},
     save_pin:{zh:"保存 PIN",en:"Save PIN",it:"Salva PIN"},
-    pin_set:{zh:"已设置 ✓ 进汇总/菜单/设置需要 PIN",en:"Set ✓ — admin needs PIN",it:"Impostato ✓ — serve il PIN"},
-    pin_none:{zh:"未设置(齿轮当前不锁)",en:"Not set (gear unlocked)",it:"Non impostato (sbloccato)"},
+    pin_set:{zh:"已设置 ✓ 老板用它登录,也开启了登录界面",en:"Set ✓ — owner login PIN; enables the login screen",it:"Impostato ✓ — PIN del titolare; attiva l'accesso"},
+    pin_none:{zh:"未设置(不需登录,直接以老板身份使用)",en:"Not set (no login; you act as owner)",it:"Non impostato (nessun accesso; sei il titolare)"},
     owner:{zh:"老板",en:"Owner",it:"Titolare"},
     cur_user:{zh:"当前",en:"Current",it:"Attuale"},
     lock_switch:{zh:"锁定 / 换人",en:"Lock / switch",it:"Blocca / cambia"},
@@ -618,8 +618,7 @@
   $("gearBtn").onclick=(e)=>{
     e.stopPropagation();
     if(!$("adminMenu").classList.contains("hidden")){ $("adminMenu").classList.add("hidden"); return; }
-    const st=curStore();
-    if(st && st.admin_pin){ askPin(st.admin_pin,openAdminMenu); } else { openAdminMenu(); }
+    openAdminMenu();
   };
   $("adminMenu").querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{ $("adminMenu").classList.add("hidden"); switchTab(b.dataset.go); });
   document.addEventListener('click',(e)=>{ if(!$("adminMenu").classList.contains("hidden") && !$("gearBtn").contains(e.target) && !e.target.closest('#adminMenu')) $("adminMenu").classList.add("hidden"); });
