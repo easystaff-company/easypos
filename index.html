@@ -27,6 +27,7 @@
   .gear{background:var(--soft);color:var(--gold);border-radius:10px;width:38px;height:38px;display:grid;place-items:center;flex:none}
   .gear:active{transform:translateY(1px)}
   .gear.on{background:linear-gradient(180deg,var(--gold),var(--gold2));color:#1a1a1e}
+  .permgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .card{background:var(--card);border:1px solid #23232b;border-radius:var(--r);padding:20px 16px;margin-bottom:16px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
   h1{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:24px;margin-bottom:4px}
   .sub{color:var(--muted);font-size:14px;margin-bottom:18px}
@@ -175,7 +176,13 @@
     <div class="msg err" id="loginMsg"></div>
   </div>
 
+  <div class="card hidden" id="userSelectView">
+    <h1 data-i18n="pick_user">选择用户</h1>
+    <div class="tgrid" id="usList" style="margin-top:14px"></div>
+  </div>
+
   <div class="card hidden" id="appView">
+    <div id="userBar" class="hidden" style="display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:10px"><span><span data-i18n="cur_user">当前</span>: <b id="curUserName" style="color:var(--ink)"></b></span><button id="lockBtn" class="btn ghost" style="padding:6px 12px;font-size:13px;margin:0" data-i18n="lock_switch">锁定 / 换人</button></div>
     <div class="seg"><button id="tabSell" class="on" data-i18n="tab_sell">收银</button><button id="tabDine" data-i18n="tab_dine">点菜</button><button id="tabOrders" data-i18n="tab_orders">订单</button></div>
 
     <div id="sellTab">
@@ -245,7 +252,7 @@
     </div>
 
     <div id="settingsTab" class="hidden">
-      <div class="subseg"><button id="ssStore" class="on" data-i18n="set_store">店铺</button><button id="ssTables" data-i18n="set_tables">桌位</button><button id="ssNotify" data-i18n="set_notify">通知</button><button id="ssAccount" data-i18n="set_account">账户</button></div>
+      <div class="subseg"><button id="ssStore" class="on" data-i18n="set_store">店铺</button><button id="ssTables" data-i18n="set_tables">桌位</button><button id="ssUsers" data-i18n="set_users">用户</button><button id="ssNotify" data-i18n="set_notify">通知</button><button id="ssAccount" data-i18n="set_account">账户</button></div>
 
       <div id="setStore">
         <label data-i18n="cur_store">当前店铺</label><select id="storeSel"></select>
@@ -260,6 +267,17 @@
       <div id="setTables" class="hidden">
         <div class="row-add"><input id="tableName" data-ph="table_ph" placeholder="桌号,如 1 / 2 / 露台3" /><button class="btn sm" id="addTableBtn" data-i18n="add">添加</button></div>
         <div class="chips" id="tableList" style="margin-top:12px"></div>
+      </div>
+
+      <div id="setUsers" class="hidden">
+        <label data-i18n="user_name">用户名</label><input id="uName" data-ph="user_name_ph" placeholder="如:张三 / 服务员A" />
+        <label data-i18n="user_pin">PIN(4–6 位数字,可留空)</label><input id="uPin" type="password" inputmode="numeric" autocomplete="off" placeholder="••••" />
+        <div class="section-t" data-i18n="perms_t">权限</div>
+        <div id="uPerms" class="permgrid"></div>
+        <button class="btn ghost sm" id="uAllBtn" style="width:auto;margin-top:10px" data-i18n="perm_all">全选(老板)</button>
+        <button class="btn" id="addUserBtn" data-i18n="add_user">添加用户</button>
+        <div class="msg" id="userMsg"></div>
+        <div id="userList" style="margin-top:14px"></div>
       </div>
 
       <div id="setNotify" class="hidden">
@@ -321,7 +339,7 @@
     <button class="btn" id="tmSettle" data-i18n="checkout">结账</button>
     <button class="btn ghost" id="tmSplit" style="width:100%;margin-top:10px;text-align:center" data-i18n="split_items">选菜结账</button>
     <button class="btn ghost" id="tmAdd" style="width:100%;margin-top:10px;text-align:center" data-i18n="add_items">加菜</button>
-    <div class="row2" style="margin-top:10px"><button class="btn ghost" id="tmMove" style="width:100%;margin:0" data-i18n="move_table">换桌</button><button class="btn ghost" id="tmMerge" style="width:100%;margin:0" data-i18n="merge_table">拼桌</button></div>
+    <div class="row2" id="tmMMRow" style="margin-top:10px"><button class="btn ghost" id="tmMove" style="width:100%;margin:0" data-i18n="move_table">换桌</button><button class="btn ghost" id="tmMerge" style="width:100%;margin:0" data-i18n="merge_table">拼桌</button></div>
     <button class="btn" id="tmDelete" style="width:100%;margin-top:10px;background:linear-gradient(180deg,#ff5a4d,#d63a2e);color:#fff" data-i18n="del_order">删除整单</button>
   </div>
 </div>
@@ -338,6 +356,11 @@
 <div id="payModal" class="modal hidden">
   <div class="sheet">
     <div class="sheet-h"><b data-i18n="pay_method">付款方式</b><span class="x" id="pmClose">✕</span></div>
+    <div id="pmDiscBox" class="hidden" style="margin-top:8px">
+      <div class="subseg" style="margin-bottom:8px"><button id="pmDiscOff" class="on" data-i18n="disc_off">无折扣</button><button id="pmDiscAmtBtn" data-i18n="disc_amt">减金额</button><button id="pmDiscPctBtn" data-i18n="disc_pct">减 %</button></div>
+      <input id="pmDiscInput" type="number" inputmode="decimal" step="0.01" class="hidden" placeholder="0" />
+      <div class="total-row"><span data-i18n="discount_w">折扣</span><b id="pmDiscShow" style="color:var(--ok)">−€0.00</b></div>
+    </div>
     <div class="total-row" id="pmAaRow" style="margin-top:8px"><span data-i18n="aa_split">AA 平分(分几人)</span><span class="stepper"><button id="pmAaMinus">−</button><span class="q" id="pmAaN">1</span><button id="pmAaPlus">+</button></span></div>
     <div id="pmPersonRow" class="hidden" style="background:rgba(230,180,80,.16);color:var(--gold);font-weight:800;padding:10px 12px;border-radius:11px;margin:4px 0 2px;font-size:15px;text-align:center"></div>
     <div class="seg" style="margin-top:8px"><button id="pmCash" class="on" data-i18n="pay_cash">现金</button><button id="pmCard" data-i18n="pay_card">刷卡</button></div>
@@ -472,7 +495,34 @@
     admin_pin_hint:{zh:"4–6 位数字,留空=取消",en:"4–6 digits, blank to remove",it:"4–6 cifre, vuoto per rimuovere"},
     save_pin:{zh:"保存 PIN",en:"Save PIN",it:"Salva PIN"},
     pin_set:{zh:"已设置 ✓ 进汇总/菜单/设置需要 PIN",en:"Set ✓ — admin needs PIN",it:"Impostato ✓ — serve il PIN"},
-    pin_none:{zh:"未设置(齿轮当前不锁)",en:"Not set (gear unlocked)",it:"Non impostato (sbloccato)"}
+    pin_none:{zh:"未设置(齿轮当前不锁)",en:"Not set (gear unlocked)",it:"Non impostato (sbloccato)"},
+    owner:{zh:"老板",en:"Owner",it:"Titolare"},
+    cur_user:{zh:"当前",en:"Current",it:"Attuale"},
+    lock_switch:{zh:"锁定 / 换人",en:"Lock / switch",it:"Blocca / cambia"},
+    pick_user:{zh:"选择用户",en:"Select user",it:"Seleziona utente"},
+    set_users:{zh:"用户",en:"Users",it:"Utenti"},
+    user_name:{zh:"用户名",en:"User name",it:"Nome utente"},
+    user_name_ph:{zh:"如:张三 / 服务员A",en:"e.g. Anna / Waiter A",it:"es. Anna / Cameriere A"},
+    user_pin:{zh:"PIN(4–6 位数字,可留空)",en:"PIN (4–6 digits, optional)",it:"PIN (4–6 cifre, facolt.)"},
+    user_pin_change:{zh:"改 PIN(留空=不变)",en:"New PIN (blank = keep)",it:"Nuovo PIN (vuoto = invariato)"},
+    perms_t:{zh:"权限",en:"Permissions",it:"Permessi"},
+    perm_all:{zh:"全选(老板)",en:"All (owner)",it:"Tutti (titolare)"},
+    add_user:{zh:"添加用户",en:"Add user",it:"Aggiungi utente"},
+    no_users:{zh:"还没有用户(默认以老板身份使用)",en:"No users yet (you act as owner)",it:"Nessun utente (sei il titolare)"},
+    del_user:{zh:"删除这个用户?",en:"Delete this user?",it:"Eliminare questo utente?"},
+    perm_none:{zh:"无权限",en:"No permissions",it:"Nessun permesso"},
+    p_order:{zh:"点单",en:"Take orders",it:"Ordini"},
+    p_checkout:{zh:"结账收款",en:"Checkout",it:"Pagamenti"},
+    p_discount:{zh:"打折",en:"Discount",it:"Sconto"},
+    p_void:{zh:"撤菜",en:"Void item",it:"Storno"},
+    p_delete:{zh:"删除整单",en:"Delete order",it:"Elimina ordine"},
+    p_report:{zh:"看汇总",en:"Reports",it:"Riepiloghi"},
+    p_menu:{zh:"改菜单",en:"Edit menu",it:"Modifica menu"},
+    p_settings:{zh:"进设置",en:"Settings",it:"Impostazioni"},
+    discount_w:{zh:"折扣",en:"Discount",it:"Sconto"},
+    disc_amt:{zh:"减金额",en:"− Amount",it:"− Importo"},
+    disc_pct:{zh:"减 %",en:"− %",it:"− %"},
+    disc_off:{zh:"无折扣",en:"None",it:"Nessuno"}
   };
 
   const $=(id)=>document.getElementById(id);
@@ -486,7 +536,8 @@
   }
   async function switchLang(l){
     lang=l; try{localStorage.setItem("lang",l);}catch(e){}
-    applyI18n(); renderCart();
+    applyI18n(); renderCart(); renderPermForm(); renderUserList(); applyPerms();
+    if(currentUser)$("curUserName").textContent=currentUser.owner?t("owner"):currentUser.name;
     if(storeId()){ await loadCategories(); await loadGroups(); await loadPmg(); await loadProducts(); loadToday(); if(!$("ordersTab").classList.contains("hidden"))loadOrders(); }
   }
   document.querySelectorAll(".langbar button").forEach(b=>b.onclick=()=>switchLang(b.dataset.lang));
@@ -503,13 +554,46 @@
   if(!window.SUPA_URL||!window.SUPA_KEY||window.SUPA_URL.includes("你的")||window.SUPA_KEY.includes("你的")){ $("cfgView").classList.remove("hidden"); throw new Error("config missing"); }
   const sb=supabase.createClient(window.SUPA_URL,window.SUPA_KEY);
   let stores=[], categories=[], products=[], groups=[], pmg=[], tables=[], cart=[], filterCat="all";
+  let users=[], currentUser=null;
+  const PERMS=[["order","p_order"],["checkout","p_checkout"],["discount","p_discount"],["void","p_void"],["delete","p_delete"],["report","p_report"],["menu","p_menu"],["settings","p_settings"]];
+  function can(p){ return !!(currentUser && (currentUser.owner || (currentUser.perms && currentUser.perms[p]))); }
   const storeId=()=>$("storeSel").value||null;
   function groupsForProduct(pid){ const ids=pmg.filter(x=>x.product_id===pid).map(x=>x.group_id); return groups.filter(g=>ids.includes(g.id)); }
 
   async function render(){
     const {data:{session}}=await sb.auth.getSession();
-    if(session){ $("loginView").classList.add("hidden"); $("appView").classList.remove("hidden"); $("gearBtn").classList.remove("hidden"); $("userEmail").textContent=session.user.email; await loadStores(); loadNotifyConfig(); }
-    else { $("appView").classList.add("hidden"); $("loginView").classList.remove("hidden"); $("gearBtn").classList.add("hidden"); $("adminMenu").classList.add("hidden"); }
+    if(session){ $("loginView").classList.add("hidden"); $("userEmail").textContent=session.user.email; await loadStores(); loadNotifyConfig(); enterAfterLogin(); }
+    else { currentUser=null; $("appView").classList.add("hidden"); $("userSelectView").classList.add("hidden"); $("loginView").classList.remove("hidden"); $("gearBtn").classList.add("hidden"); $("adminMenu").classList.add("hidden"); $("userBar").classList.add("hidden"); }
+  }
+  function gateActive(){ const st=curStore(); return (users.length>0) || (st && st.admin_pin); }
+  function setOwner(){ currentUser={owner:true,name:t("owner"),perms:{}}; }
+  function enterAfterLogin(){
+    if(gateActive()){ if(currentUser){ showApp(); } else { showUserSelect(); } }
+    else { setOwner(); showApp(); }
+  }
+  function showApp(){ $("userSelectView").classList.add("hidden"); $("appView").classList.remove("hidden"); $("userBar").classList.toggle("hidden",!gateActive()); applyPerms(); }
+  function showUserSelect(){ $("appView").classList.add("hidden"); $("gearBtn").classList.add("hidden"); $("adminMenu").classList.add("hidden"); buildUserSelect(); $("userSelectView").classList.remove("hidden"); }
+  function buildUserSelect(){
+    const owner=`<button class="ttile" data-pickuser="__owner">${t("owner")}</button>`;
+    const staff=users.map(u=>`<button class="ttile" data-pickuser="${u.id}">${esc(u.name)}</button>`).join("");
+    $("usList").innerHTML=owner+staff;
+    $("usList").querySelectorAll('[data-pickuser]').forEach(b=>b.onclick=()=>pickUser(b.dataset.pickuser));
+  }
+  function pickUser(id){
+    if(id==="__owner"){ const st=curStore(); if(st&&st.admin_pin){ askPin(st.admin_pin,()=>{ setOwner(); showApp(); }); } else { setOwner(); showApp(); } return; }
+    const u=users.find(x=>x.id===id); if(!u)return;
+    if(u.pin){ askPin(u.pin,()=>{ currentUser={id:u.id,name:u.name,perms:u.perms||{}}; showApp(); }); }
+    else { currentUser={id:u.id,name:u.name,perms:u.perms||{}}; showApp(); }
+  }
+  $("lockBtn").onclick=()=>{ currentUser=null; showUserSelect(); };
+  function applyPerms(){
+    if(!currentUser)return;
+    $("curUserName").textContent=currentUser.name||"";
+    const mgmt=can('report')||can('menu')||can('settings');
+    $("gearBtn").classList.toggle("hidden",!mgmt);
+    $("adminMenu").querySelectorAll('[data-go]').forEach(b=>b.classList.toggle("hidden",!can(b.dataset.go)));
+    if($("openTableBtn"))$("openTableBtn").classList.toggle("hidden",!can('order'));
+    if($("dineQuickBtn"))$("dineQuickBtn").classList.toggle("hidden",!can('checkout'));
   }
   $("loginBtn").onclick=async()=>{
     hide($("loginMsg")); const b=$("loginBtn"); b.disabled=true; b.textContent=t("logging_in");
@@ -526,17 +610,18 @@
     e.stopPropagation();
     if(!$("adminMenu").classList.contains("hidden")){ $("adminMenu").classList.add("hidden"); return; }
     const st=curStore();
-    if(st && st.admin_pin){ openPin(); } else { openAdminMenu(); }
+    if(st && st.admin_pin){ askPin(st.admin_pin,openAdminMenu); } else { openAdminMenu(); }
   };
   $("adminMenu").querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{ $("adminMenu").classList.add("hidden"); switchTab(b.dataset.go); });
   document.addEventListener('click',(e)=>{ if(!$("adminMenu").classList.contains("hidden") && !$("gearBtn").contains(e.target) && !e.target.closest('#adminMenu')) $("adminMenu").classList.add("hidden"); });
-  function openPin(){ $("pinInput").value=""; hide($("pinMsg")); $("pinModal").classList.remove("hidden"); setTimeout(()=>$("pinInput").focus(),60); }
-  $("pinClose").onclick=()=>$("pinModal").classList.add("hidden");
-  $("pinModal").onclick=(e)=>{ if(e.target===$("pinModal"))$("pinModal").classList.add("hidden"); };
+  let pinCheck=null;
+  function askPin(expectedHash,onok){ pinCheck={expectedHash,onok}; $("pinInput").value=""; hide($("pinMsg")); $("pinModal").classList.remove("hidden"); setTimeout(()=>$("pinInput").focus(),60); }
+  $("pinClose").onclick=()=>{ pinCheck=null; $("pinModal").classList.add("hidden"); };
+  $("pinModal").onclick=(e)=>{ if(e.target===$("pinModal")){ pinCheck=null; $("pinModal").classList.add("hidden"); } };
   $("pinConfirm").onclick=async()=>{
-    const st=curStore(); if(!st)return;
+    if(!pinCheck)return;
     const h=await sha256hex($("pinInput").value);
-    if(h===st.admin_pin){ $("pinModal").classList.add("hidden"); openAdminMenu(); }
+    if(h===pinCheck.expectedHash){ $("pinModal").classList.add("hidden"); const cb=pinCheck.onok; pinCheck=null; if(cb)cb(); }
     else { show($("pinMsg"),t("pin_wrong"),"err"); $("pinInput").value=""; $("pinInput").focus(); }
   };
   $("pinInput").addEventListener("keydown",e=>{ if(e.key==="Enter")$("pinConfirm").onclick(); });
@@ -551,6 +636,51 @@
     st.admin_pin=hash; $("setPinInput").value=""; updatePinState(); show($("pinSaveMsg"),t("saved_ok"),"ok");
   };
   function updatePinState(){ const st=curStore(); if($("pinState"))$("pinState").textContent=(st&&st.admin_pin)?t("pin_set"):t("pin_none"); }
+
+  async function loadUsers(){
+    const sid=storeId(); if(!sid){ users=[]; renderUserList(); return; }
+    const {data,error}=await sb.from("app_users").select("*").eq("store_id",sid).order("created_at");
+    users=error?[]:(data||[]);
+    renderUserList();
+  }
+  function renderPermForm(){ const el=$("uPerms"); if(!el)return; el.innerHTML=PERMS.map(([k,lk])=>`<label class="chkrow"><input type="checkbox" data-perm="${k}"/> <span>${t(lk)}</span></label>`).join(""); }
+  function permLabel(perms){ const on=PERMS.filter(([k])=>perms&&perms[k]).map(([k,lk])=>t(lk)); return on.length?on.join("、"):t("perm_none"); }
+  function renderUserList(){
+    const el=$("userList"); if(!el)return;
+    if(!users.length){ el.innerHTML=`<div class="empty">${t("no_users")}</div>`; return; }
+    el.innerHTML=users.map(u=>{
+      const checks=PERMS.map(([k,lk])=>`<label class="chkrow"><input type="checkbox" data-eperm="${u.id}|${k}" ${u.perms&&u.perms[k]?"checked":""}/> <span>${t(lk)}</span></label>`).join("");
+      return `<div class="pwrap"><div class="item"><div class="iteminfo" data-euser="${u.id}"><div class="nm">${esc(u.name)}</div><div class="meta">${permLabel(u.perms)}</div></div><span class="x" data-deluser="${u.id}">✕</span></div>
+        <div class="attach hidden" id="eu-${u.id}" style="flex-direction:column;gap:8px;padding-top:10px"><div class="permgrid">${checks}</div><input type="password" inputmode="numeric" autocomplete="off" data-epin="${u.id}" placeholder="${t('user_pin_change')}" style="margin-top:4px"/><button class="btn sm" data-saveuser="${u.id}" style="width:auto">${t('save_btn')}</button></div></div>`;
+    }).join("");
+    el.querySelectorAll('.iteminfo[data-euser]').forEach(x=>x.onclick=()=>$("eu-"+x.dataset.euser).classList.toggle("hidden"));
+    el.querySelectorAll('[data-deluser]').forEach(x=>x.onclick=()=>delUser(x.dataset.deluser));
+    el.querySelectorAll('[data-saveuser]').forEach(b=>b.onclick=()=>saveUser(b.dataset.saveuser));
+  }
+  $("uAllBtn").onclick=()=>{ $("uPerms").querySelectorAll('[data-perm]').forEach(c=>c.checked=true); };
+  $("addUserBtn").onclick=async()=>{
+    hide($("userMsg")); const st=curStore(); if(!st){ show($("userMsg"),t("need_store"),"err"); return; }
+    const name=$("uName").value.trim(); if(!name){ show($("userMsg"),t("need_name"),"err"); return; }
+    const pv=$("uPin").value.trim(); let pin=null;
+    if(pv){ if(!/^\d{4,6}$/.test(pv)){ show($("userMsg"),t("pin_format"),"err"); return; } pin=await sha256hex(pv); }
+    const perms={}; PERMS.forEach(([k])=>{ const c=$("uPerms").querySelector(`[data-perm="${k}"]`); perms[k]=!!(c&&c.checked); });
+    const b=$("addUserBtn"); b.disabled=true; b.textContent=t("adding");
+    const {error}=await sb.from("app_users").insert({store_id:st.id,name,pin,perms});
+    b.disabled=false; b.textContent=t("add_user");
+    if(error){ show($("userMsg"),t("fail")+error.message,"err"); return; }
+    $("uName").value=""; $("uPin").value=""; renderPermForm(); show($("userMsg"),t("added"),"ok"); loadUsers();
+  };
+  async function saveUser(id){
+    const perms={}; PERMS.forEach(([k])=>{ const c=document.querySelector(`[data-eperm="${id}|${k}"]`); perms[k]=!!(c&&c.checked); });
+    const pinEl=document.querySelector(`[data-epin="${id}"]`); const pv=pinEl?pinEl.value.trim():"";
+    const patch={perms};
+    if(pv){ if(!/^\d{4,6}$/.test(pv)){ alert(t("pin_format")); return; } patch.pin=await sha256hex(pv); }
+    const {error}=await sb.from("app_users").update(patch).eq("id",id);
+    if(error){ alert(t("fail")+error.message); return; }
+    await loadUsers(); alert(t("saved_ok"));
+  }
+  async function delUser(id){ if(!confirm(t("del_user")))return; const {error}=await sb.from("app_users").delete().eq("id",id); if(error){ alert(error.message); return; } await loadUsers(); }
+  renderPermForm();
   function switchTab(tab){
     const panes={sell:"sellTab",dine:"dineTab",orders:"ordersTab",report:"reportTab",menu:"menuTab",settings:"settingsTab"};
     for(const k in panes)$(panes[k]).classList.toggle("hidden",k!==tab);
@@ -570,11 +700,12 @@
   }
   $("smCat").onclick=()=>showMenuSub("cat"); $("smProd").onclick=()=>showMenuSub("prod"); $("smMod").onclick=()=>showMenuSub("mod");
   function showSetSub(w){
-    $("ssStore").classList.toggle("on",w==="store"); $("ssTables").classList.toggle("on",w==="tables"); $("ssNotify").classList.toggle("on",w==="notify"); $("ssAccount").classList.toggle("on",w==="account");
-    $("setStore").classList.toggle("hidden",w!=="store"); $("setTables").classList.toggle("hidden",w!=="tables"); $("setNotify").classList.toggle("hidden",w!=="notify"); $("setAccount").classList.toggle("hidden",w!=="account");
+    $("ssStore").classList.toggle("on",w==="store"); $("ssTables").classList.toggle("on",w==="tables"); $("ssUsers").classList.toggle("on",w==="users"); $("ssNotify").classList.toggle("on",w==="notify"); $("ssAccount").classList.toggle("on",w==="account");
+    $("setStore").classList.toggle("hidden",w!=="store"); $("setTables").classList.toggle("hidden",w!=="tables"); $("setUsers").classList.toggle("hidden",w!=="users"); $("setNotify").classList.toggle("hidden",w!=="notify"); $("setAccount").classList.toggle("hidden",w!=="account");
     if(w==="account")updatePinState();
+    if(w==="users"){ renderPermForm(); renderUserList(); }
   }
-  $("ssStore").onclick=()=>showSetSub("store"); $("ssTables").onclick=()=>showSetSub("tables"); $("ssNotify").onclick=()=>showSetSub("notify"); $("ssAccount").onclick=()=>showSetSub("account");
+  $("ssStore").onclick=()=>showSetSub("store"); $("ssTables").onclick=()=>showSetSub("tables"); $("ssUsers").onclick=()=>showSetSub("users"); $("ssNotify").onclick=()=>showSetSub("notify"); $("ssAccount").onclick=()=>showSetSub("account");
 
   async function loadStores(){
     const {data,error}=await sb.from("stores").select("*").order("created_at");
@@ -585,7 +716,7 @@
     await reloadStore();
   }
   $("storeSel").onchange=reloadStore;
-  async function reloadStore(){ cart=[]; renderCart(); await loadCategories(); await loadGroups(); await loadPmg(); await loadProducts(); await loadTables(); await loadToday(); loadOpenTables(); }
+  async function reloadStore(){ cart=[]; renderCart(); await loadCategories(); await loadGroups(); await loadPmg(); await loadProducts(); await loadTables(); await loadUsers(); await loadToday(); loadOpenTables(); applyPerms(); }
 
   async function loadCategories(){
     const sid=storeId(); if(!sid)return;
@@ -715,6 +846,8 @@
     if($("checkoutBtn"))$("checkoutBtn").disabled=empty;
     if($("openTableBtn"))$("openTableBtn").disabled=empty;
     if($("dineQuickBtn"))$("dineQuickBtn").disabled=empty;
+    if($("openTableBtn"))$("openTableBtn").classList.toggle("hidden",!can('order'));
+    if($("dineQuickBtn"))$("dineQuickBtn").classList.toggle("hidden",!can('checkout'));
     if($("addToTableBtn"))$("addToTableBtn").disabled=empty;
     if(empty&&$("checkoutPanel"))$("checkoutPanel").classList.add("hidden");
   }
@@ -889,13 +1022,16 @@
   function openTableDetail(id,ctx){
     if(ctx)curCtx=ctx;
     const o=openOrders.find(x=>x.id===id); if(!o)return; curOpen=o;
-    $("tmSettle").classList.toggle("hidden",curCtx==="dine");
-    $("tmSplit").classList.toggle("hidden",curCtx==="dine");
-    $("tmDelete").classList.toggle("hidden",curCtx==="sell");
+    $("tmSettle").classList.toggle("hidden",curCtx==="dine"||!can('checkout'));
+    $("tmSplit").classList.toggle("hidden",curCtx==="dine"||!can('checkout'));
+    $("tmAdd").classList.toggle("hidden",!can('order'));
+    $("tmMMRow").classList.toggle("hidden",!can('order'));
+    $("tmDelete").classList.toggle("hidden",curCtx==="sell"||!can('delete'));
     $("tmTitle").textContent=t("table_word")+" "+(o.tables?o.tables.name:"—");
-    $("tmItems").innerHTML=(o.order_items||[]).map(i=>`<div class="rline"><span>${esc(i.name)}${i.options_text?` (${esc(i.options_text)})`:""} ×${i.qty}</span><span class="rline-r">${money(i.line_total)} <span class="voidbtn" data-iid="${i.id}" data-nm="${esc(i.name)}" data-amt="${i.line_total}" data-qty="${i.qty}" data-opt="${esc(i.options_text||'')}">${t("void_btn")}</span></span></div>`).join("")||`<div class="empty">—</div>`;
+    const showVoid=can('void');
+    $("tmItems").innerHTML=(o.order_items||[]).map(i=>`<div class="rline"><span>${esc(i.name)}${i.options_text?` (${esc(i.options_text)})`:""} ×${i.qty}</span><span class="rline-r">${money(i.line_total)}${showVoid?` <span class="voidbtn" data-iid="${i.id}" data-nm="${esc(i.name)}" data-amt="${i.line_total}" data-qty="${i.qty}" data-opt="${esc(i.options_text||'')}">${t("void_btn")}</span>`:""}</span></div>`).join("")||`<div class="empty">—</div>`;
     $("tmTotal").textContent=money(orderTotal(o));
-    $("tmItems").querySelectorAll('.voidbtn').forEach(b=>b.onclick=()=>voidItem(o,b.dataset));
+    if(showVoid)$("tmItems").querySelectorAll('.voidbtn').forEach(b=>b.onclick=()=>voidItem(o,b.dataset));
     $("tblModal").classList.remove("hidden");
   }
   let reasonCb=null;
@@ -987,25 +1123,33 @@
   $("payModal").onclick=(e)=>{ if(e.target===$("payModal"))$("payModal").classList.add("hidden"); };
   $("tblModal").onclick=(e)=>{ if(e.target===$("tblModal"))$("tblModal").classList.add("hidden"); };
   $("tblPickModal").onclick=(e)=>{ if(e.target===$("tblPickModal"))$("tblPickModal").classList.add("hidden"); };
-  // ---- AA 平分 state ----
+  // ---- AA 平分 + 折扣 state ----
   let aaN=1, aaIdx=0, aaShares=[], aaDone=[];
+  let discMode="none", discVal=0;
+  function discAmount(){ const g=Number(payCtx&&payCtx.total)||0; if(discMode==="amt")return Math.min(g,Math.max(0,Number(discVal)||0)); if(discMode==="pct"){ const p=Math.min(100,Math.max(0,Number(discVal)||0)); return +(g*p/100).toFixed(2); } return 0; }
+  function effTotal(){ return +(Number(payCtx.total)-discAmount()).toFixed(2); }
   function computeShares(total,n){ const cents=Math.round(Number(total)*100); const base=Math.floor(cents/n); const arr=Array(n).fill(base); arr[n-1]+=cents-base*n; return arr.map(c=>c/100); }
-  function curDue(){ return (aaN>1 && aaShares.length) ? aaShares[Math.min(aaIdx,aaShares.length-1)] : payCtx.total; }
+  function curDue(){ return (aaN>1 && aaShares.length) ? aaShares[Math.min(aaIdx,aaShares.length-1)] : effTotal(); }
+  function recalcShares(){ if(aaN>1)aaShares=computeShares(effTotal(),aaN); }
   function renderPmAa(){
     $("pmAaN").textContent=aaN;
     const multi=aaN>1;
     $("pmPersonRow").classList.toggle("hidden",!multi);
     if(multi)$("pmPersonRow").textContent=t("aa_person",{k:aaIdx+1,n:aaN,m:money(curDue())});
-    $("pmTotal").textContent=money(payCtx.total);
+    $("pmDiscShow").textContent="−"+money(discAmount());
+    $("pmTotal").textContent=money(effTotal());
     const ci=parseFloat($("pmCashInput").value);
     $("pmChange").textContent=money(isNaN(ci)?0:Math.max(0,ci-curDue()));
     const remaining=multi?(aaN-aaDone.length):1;
     $("pmConfirm").textContent=(multi&&remaining>1)?t("aa_collect_next"):t("finish");
   }
-  $("pmAaPlus").onclick=()=>{ if(aaDone.length>0)return; aaN++; aaShares=computeShares(payCtx.total,aaN); aaIdx=0; setPm("cash"); $("pmCashInput").value=""; renderPmAa(); };
-  $("pmAaMinus").onclick=()=>{ if(aaDone.length>0||aaN<=1)return; aaN--; aaShares=aaN>1?computeShares(payCtx.total,aaN):[]; aaIdx=0; setPm("cash"); $("pmCashInput").value=""; renderPmAa(); };
+  function setDisc(mode){ if(aaDone.length>0)return; discMode=mode; $("pmDiscOff").classList.toggle("on",mode==="none"); $("pmDiscAmtBtn").classList.toggle("on",mode==="amt"); $("pmDiscPctBtn").classList.toggle("on",mode==="pct"); $("pmDiscInput").classList.toggle("hidden",mode==="none"); if(mode==="none"){ discVal=0; $("pmDiscInput").value=""; } recalcShares(); renderPmAa(); }
+  $("pmDiscOff").onclick=()=>setDisc("none"); $("pmDiscAmtBtn").onclick=()=>setDisc("amt"); $("pmDiscPctBtn").onclick=()=>setDisc("pct");
+  $("pmDiscInput").oninput=()=>{ if(aaDone.length>0)return; discVal=parseFloat($("pmDiscInput").value)||0; recalcShares(); renderPmAa(); };
+  $("pmAaPlus").onclick=()=>{ if(aaDone.length>0)return; aaN++; aaShares=computeShares(effTotal(),aaN); aaIdx=0; setPm("cash"); $("pmCashInput").value=""; renderPmAa(); };
+  $("pmAaMinus").onclick=()=>{ if(aaDone.length>0||aaN<=1)return; aaN--; aaShares=aaN>1?computeShares(effTotal(),aaN):[]; aaIdx=0; setPm("cash"); $("pmCashInput").value=""; renderPmAa(); };
   $("pmCashInput").oninput=()=>{ const ch=parseFloat($("pmCashInput").value)-curDue(); $("pmChange").textContent=money(isNaN(ch)?0:Math.max(0,ch)); };
-  function openPay(ctx){ payCtx=ctx; aaN=1; aaIdx=0; aaShares=[]; aaDone=[]; setPm("cash"); $("pmCashInput").value=""; $("pmAaMinus").disabled=false; $("pmAaPlus").disabled=false; hide($("pmMsg")); renderPmAa(); $("payModal").classList.remove("hidden"); }
+  function openPay(ctx){ payCtx=ctx; aaN=1; aaIdx=0; aaShares=[]; aaDone=[]; discMode="none"; discVal=0; $("pmDiscInput").value=""; $("pmDiscBox").classList.toggle("hidden",!can('discount')); setDisc("none"); setPm("cash"); $("pmCashInput").value=""; $("pmAaMinus").disabled=false; $("pmAaPlus").disabled=false; hide($("pmMsg")); renderPmAa(); $("payModal").classList.remove("hidden"); }
 
   async function insertCompleted(total,method,cash,change,tableId,items){
     const type=(payCtx.source==="quick")?"quick":"dine";
@@ -1041,7 +1185,7 @@
     else if(payCtx.source==="split"){ await shrinkSource(payCtx.orderId,payCtx.items); }
     return null;
   }
-  function afterPay(){ if(payCtx.source==="quick"){ cart=[]; renderCart(); } loadOpenTables(); loadToday(); if(!$("ordersTab").classList.contains("hidden"))loadOrders(); }
+  async function afterPay(){ const da=discAmount(); if(da>0){ try{ await sb.from("audit_log").insert({store_id:storeId(),action:t("discount_w"),detail:(currentUser?currentUser.name+" · ":"")+money(effTotal()),amount:da}); }catch(e){} } if(payCtx.source==="quick"){ cart=[]; renderCart(); } loadOpenTables(); loadToday(); if(!$("ordersTab").classList.contains("hidden"))loadOrders(); }
 
   $("pmConfirm").onclick=async()=>{
     hide($("pmMsg")); const b=$("pmConfirm");
