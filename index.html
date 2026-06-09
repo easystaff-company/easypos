@@ -495,6 +495,7 @@
     no_free_table:{zh:"没有其他桌位",en:"No other tables",it:"Nessun altro tavolo"},
     no_other_open:{zh:"没有其他开着的桌",en:"No other open tables",it:"Nessun altro tavolo aperto"},
     move_occupied_confirm:{zh:"目标桌已开台,把这桌并过去吗?",en:"Target table is busy — merge this one into it?",it:"Tavolo occupato — unire questo a quello?"},
+    move_confirm:{zh:"把这桌换到「{t}」吗?",en:"Move this table to “{t}”?",it:"Spostare al tavolo “{t}”?"},
     merge_confirm:{zh:"把「{b}」的菜并到「{a}」吗?",en:"Merge “{b}” into “{a}”?",it:"Unire “{b}” in “{a}”?"},
     pin_title:{zh:"输入管理 PIN",en:"Enter admin PIN",it:"Inserisci PIN admin"},
     pin_wrong:{zh:"PIN 不对",en:"Wrong PIN",it:"PIN errato"},
@@ -1030,12 +1031,17 @@
     const html=openOrders.map(o=>{
       const tot=(o.order_items||[]).reduce((s,i)=>s+Number(i.line_total),0);
       const n=(o.order_items||[]).reduce((s,i)=>s+Number(i.qty),0);
-      const tname=o.tables?o.tables.name:"—";
+      const tname=tableLabel(o);
       return `<div class="order"><div class="ohead" data-open="${o.id}"><div><div class="nm">${t("table_word")} ${esc(tname)}</div><div class="meta">${money(tot)} · ${n} ${t("items_word")}</div></div><span class="chev">▸</span></div></div>`;
     }).join("");
     fill(html); attach();
   }
   function orderTotal(o){ return (o.order_items||[]).reduce((s,i)=>s+Number(i.line_total),0); }
+  function orderTableIds(o){ return [o.table_id, ...((o.extra_tables)||[])].filter(Boolean); }
+  function occupantOrder(tid){ return openOrders.find(o=>orderTableIds(o).includes(tid)); }
+  function occupiedSet(){ const s=new Set(); openOrders.forEach(o=>orderTableIds(o).forEach(t=>s.add(t))); return s; }
+  function orderTableNames(o){ return orderTableIds(o).map(tid=>{ const tb=tables.find(x=>x.id===tid); return tb?tb.name:((o.tables&&o.table_id===tid)?o.tables.name:null); }).filter(Boolean); }
+  function tableLabel(o){ const ns=orderTableNames(o); return ns.length?ns.join("+"):(o.tables?o.tables.name:"—"); }
   function openTableDetail(id,ctx){
     if(ctx)curCtx=ctx;
     const o=openOrders.find(x=>x.id===id); if(!o)return; curOpen=o;
@@ -1044,7 +1050,7 @@
     $("tmAdd").classList.toggle("hidden",!can('order'));
     $("tmMMRow").classList.toggle("hidden",!can('order'));
     $("tmDelete").classList.toggle("hidden",curCtx==="sell"||!can('delete'));
-    $("tmTitle").textContent=t("table_word")+" "+(o.tables?o.tables.name:"—");
+    $("tmTitle").textContent=t("table_word")+" "+tableLabel(o);
     const showVoid=can('void');
     $("tmItems").innerHTML=(o.order_items||[]).map(i=>`<div class="rline"><span>${esc(i.name)}${i.options_text?` (${esc(i.options_text)})`:""} ×${i.qty}</span><span class="rline-r">${money(i.line_total)}${showVoid?` <span class="voidbtn" data-iid="${i.id}" data-nm="${esc(i.name)}" data-amt="${i.line_total}" data-qty="${i.qty}" data-opt="${esc(i.options_text||'')}">${t("void_btn")}</span>`:""}</span></div>`).join("")||`<div class="empty">—</div>`;
     $("tmTotal").textContent=money(orderTotal(o));
@@ -1063,7 +1069,7 @@
       if(error){ alert(t("fail")+error.message); return; }
       const newTotal=Math.max(0,Number(o.total||0)-Number(d.amt));
       await sb.from("orders").update({total:+newTotal.toFixed(2)}).eq("id",o.id);
-      await sb.from("audit_log").insert({store_id:storeId(),action:t("void_item")+" · "+t("table_word")+" "+(o.tables?o.tables.name:"—"),detail:label+(note?(" — "+note):""),amount:Number(d.amt)});
+      await sb.from("audit_log").insert({store_id:storeId(),action:t("void_item")+" · "+t("table_word")+" "+tableLabel(o),detail:label+(note?(" — "+note):""),amount:Number(d.amt)});
       await loadOpenTables();
       const fresh=openOrders.find(x=>x.id===o.id);
       if(fresh && (fresh.order_items||[]).length){ openTableDetail(fresh.id); }
@@ -1071,7 +1077,7 @@
     });
   }
   $("tmDelete").onclick=()=>{
-    if(!curOpen)return; const o=curOpen; const tname=o.tables?o.tables.name:"—"; const tot=orderTotal(o);
+    if(!curOpen)return; const o=curOpen; const tname=tableLabel(o); const tot=orderTotal(o);
     askReason(t("del_order")+" · "+t("table_word")+" "+tname,money(tot),async(note)=>{
       await sb.from("order_items").delete().eq("order_id",o.id);
       const {error}=await sb.from("orders").delete().eq("id",o.id);
@@ -1113,7 +1119,7 @@
   $("tpClose").onclick=()=>$("tblPickModal").classList.add("hidden");
   async function openTableWith(tableId){
     const tname=(tables.find(x=>x.id===tableId)||{}).name||"";
-    const existing=openOrders.find(o=>o.table_id===tableId);
+    const existing=occupantOrder(tableId);
     if(existing){
       if(!confirm(t("table_word")+" "+tname+" "+t("already_open_confirm"))) return;
       const items=cart.map(l=>({order_id:existing.id,product_id:l.product_id,name:l.name,price:l.price,qty:l.qty,line_total:+(l.price*l.qty).toFixed(2),options_text:l.options_text||null}));
@@ -1257,7 +1263,9 @@
     await sb.from("order_items").update({order_id:keep.id}).eq("order_id",drop.id);
     const {data:items}=await sb.from("order_items").select("line_total").eq("order_id",keep.id);
     const tot=(items||[]).reduce((s,r)=>s+Number(r.line_total),0);
-    await sb.from("orders").update({total:+tot.toFixed(2)}).eq("id",keep.id);
+    const ex=new Set([...((keep.extra_tables)||[]), drop.table_id, ...((drop.extra_tables)||[])].filter(Boolean));
+    ex.delete(keep.table_id);
+    await sb.from("orders").update({total:+tot.toFixed(2),extra_tables:[...ex]}).eq("id",keep.id);
     await sb.from("orders").delete().eq("id",drop.id);
   }
   $("mvClose").onclick=()=>$("mvModal").classList.add("hidden");
@@ -1265,24 +1273,20 @@
 
   $("tmMove").onclick=()=>{
     const o=curOpen; if(!o)return;
-    const occupied=new Set(openOrders.map(x=>x.table_id));
-    const others=tables.filter(tb=>tb.id!==o.table_id);
+    const own=new Set(orderTableIds(o));
+    const occ=occupiedSet();
+    const cands=tables.filter(tb=>!own.has(tb.id));
     $("tblModal").classList.add("hidden"); hide($("mvMsg")); $("mvTitle").textContent=t("move_to_title");
-    $("mvList").innerHTML=others.length?others.map(tb=>{ const busy=occupied.has(tb.id);
-      return `<button class="ttile" data-mv="${tb.id}" data-busy="${busy?1:0}">${esc(tb.name)}${busy?`<div style="font-size:11px;color:var(--muted);font-weight:600;margin-top:4px">${t("busy_word")}</div>`:""}</button>`; }).join("")
+    $("mvList").innerHTML=cands.length?cands.map(tb=>{ const busy=occ.has(tb.id);
+      return `<button class="ttile" data-mv="${tb.id}" ${busy?'disabled style="opacity:.4;cursor:not-allowed"':''}>${esc(tb.name)}${busy?`<div style="font-size:11px;color:var(--muted);font-weight:600;margin-top:4px">${t("busy_word")}</div>`:""}</button>`; }).join("")
       :`<div class="empty" style="grid-column:1/-1">${t("no_free_table")}</div>`;
-    $("mvList").querySelectorAll('[data-mv]').forEach(c=>c.onclick=()=>doMove(c.dataset.mv,c.dataset.busy==="1"));
+    $("mvList").querySelectorAll('[data-mv]:not([disabled])').forEach(c=>c.onclick=()=>doMove(c.dataset.mv));
     $("mvModal").classList.remove("hidden");
   };
-  async function doMove(targetId,busy){
+  async function doMove(targetId){
     const o=curOpen; if(!o)return;
-    if(busy){
-      const target=openOrders.find(x=>x.table_id===targetId);
-      if(!target)return;
-      if(!confirm(t("move_occupied_confirm")))return;
-      await mergeOrders(target,o);
-      $("mvModal").classList.add("hidden"); loadOpenTables(); return;
-    }
+    const tn=(tables.find(x=>x.id===targetId)||{}).name||"";
+    if(!confirm(t("move_confirm",{t:tn})))return;
     const {error}=await sb.from("orders").update({table_id:targetId}).eq("id",o.id);
     if(error){ show($("mvMsg"),t("fail")+error.message,"err"); return; }
     $("mvModal").classList.add("hidden"); loadOpenTables();
@@ -1292,15 +1296,15 @@
     const o=curOpen; if(!o)return;
     const others=openOrders.filter(x=>x.id!==o.id);
     $("tblModal").classList.add("hidden"); hide($("mvMsg")); $("mvTitle").textContent=t("merge_into_title");
-    $("mvList").innerHTML=others.length?others.map(ord=>{ const nm=ord.tables?ord.tables.name:"—";
-      return `<button class="ttile" data-mg="${ord.id}">${esc(nm)}<div style="font-size:11px;color:var(--muted);font-weight:600;margin-top:4px">${money(orderTotal(ord))}</div></button>`; }).join("")
+    $("mvList").innerHTML=others.length?others.map(ord=>{
+      return `<button class="ttile" data-mg="${ord.id}">${esc(tableLabel(ord))}<div style="font-size:11px;color:var(--muted);font-weight:600;margin-top:4px">${money(orderTotal(ord))}</div></button>`; }).join("")
       :`<div class="empty" style="grid-column:1/-1">${t("no_other_open")}</div>`;
     $("mvList").querySelectorAll('[data-mg]').forEach(c=>c.onclick=()=>doMerge(c.dataset.mg));
     $("mvModal").classList.remove("hidden");
   };
   async function doMerge(otherId){
     const o=curOpen; const other=openOrders.find(x=>x.id===otherId); if(!o||!other)return;
-    const aName=o.tables?o.tables.name:"—", bName=other.tables?other.tables.name:"—";
+    const aName=tableLabel(o), bName=tableLabel(other);
     if(!confirm(t("merge_confirm",{a:aName,b:bName})))return;
     await mergeOrders(o,other);
     $("mvModal").classList.add("hidden"); loadOpenTables();
