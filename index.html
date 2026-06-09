@@ -294,11 +294,6 @@
 
       <div id="setAccount" class="hidden">
         <div class="who" style="font-size:15px;margin-bottom:16px"><span data-i18n="account">账户:</span> <b id="userEmail">—</b></div>
-        <div class="section-t" data-i18n="admin_pin_t">管理 PIN</div>
-        <div class="sub" id="pinState" style="font-size:13px;margin-bottom:8px"></div>
-        <input id="setPinInput" type="password" inputmode="numeric" autocomplete="off" data-ph="admin_pin_hint" placeholder="4–6 位数字,留空=取消" />
-        <button class="btn" id="savePinBtn" data-i18n="save_pin">保存 PIN</button>
-        <div class="msg" id="pinSaveMsg"></div>
         <button class="btn ghost" id="logoutBtn" style="width:100%;text-align:center;margin-top:18px" data-i18n="logout">退出</button>
       </div>
     </div>
@@ -402,6 +397,16 @@
     <input id="pinInput" type="password" inputmode="numeric" autocomplete="off" placeholder="••••" style="text-align:center;letter-spacing:10px;font-size:22px;margin-top:8px" />
     <button class="btn" id="pinConfirm" data-i18n="confirm_btn">确认</button>
     <div class="msg" id="pinMsg"></div>
+  </div>
+</div>
+
+<div id="elevModal" class="modal hidden">
+  <div class="sheet">
+    <div class="sheet-h"><b data-i18n="need_auth">需要有权限的账号</b><span class="x" id="elClose">✕</span></div>
+    <label data-i18n="user_name">用户名</label><input id="elName" autocomplete="off" data-ph="user_name_ph" placeholder="如:张三" />
+    <label data-i18n="pin_word">PIN</label><input id="elPin" type="password" inputmode="numeric" autocomplete="off" placeholder="••••" />
+    <button class="btn" id="elConfirm" data-i18n="confirm_btn">确认</button>
+    <div class="msg" id="elMsg"></div>
   </div>
 </div>
 
@@ -527,7 +532,9 @@
     disc_pct:{zh:"减 %",en:"− %",it:"− %"},
     disc_off:{zh:"无折扣",en:"None",it:"Nessuno"},
     staff_login:{zh:"登录",en:"Sign in",it:"Accedi"},
-    staff_login_sub:{zh:"输入用户名和 PIN(老板用管理 PIN)",en:"Enter name and PIN (owner uses admin PIN)",it:"Nome e PIN (titolare: PIN admin)"},
+    staff_login_sub:{zh:"输入用户名和 PIN",en:"Enter your name and PIN",it:"Inserisci nome e PIN"},
+    need_auth:{zh:"需要有权限的账号",en:"Authorized account required",it:"Serve un account autorizzato"},
+    no_perm_acct:{zh:"该账号没有这个权限",en:"That account lacks permission",it:"Account senza permesso"},
     pin_word:{zh:"PIN",en:"PIN",it:"PIN"},
     need_name_pin:{zh:"请输入用户名和 PIN",en:"Enter name and PIN",it:"Inserisci nome e PIN"},
     login_bad:{zh:"用户名或 PIN 不对",en:"Wrong name or PIN",it:"Nome o PIN errati"}
@@ -573,7 +580,7 @@
     if(session){ $("loginView").classList.add("hidden"); $("userEmail").textContent=session.user.email; await loadStores(); loadNotifyConfig(); enterAfterLogin(); }
     else { currentUser=null; $("appView").classList.add("hidden"); $("userSelectView").classList.add("hidden"); $("loginView").classList.remove("hidden"); $("gearBtn").classList.add("hidden"); $("adminMenu").classList.add("hidden"); $("userBar").classList.add("hidden"); }
   }
-  function gateActive(){ const st=curStore(); return !!(st && st.admin_pin); }
+  function gateActive(){ return users.length>0; }
   function setOwner(){ currentUser={owner:true,name:t("owner"),perms:{}}; }
   function enterAfterLogin(){
     if(gateActive()){ if(currentUser){ showApp(); } else { showUserSelect(); } }
@@ -588,8 +595,6 @@
     const h=await sha256hex(pinv);
     const u=users.find(x=>(x.name||"").trim().toLowerCase()===name.toLowerCase() && x.pin===h);
     if(u){ currentUser={id:u.id,name:u.name,perms:u.perms||{}}; showApp(); return; }
-    const st=curStore();
-    if(st && st.admin_pin && h===st.admin_pin){ setOwner(); showApp(); return; }
     show($("suMsg"),t("login_bad"),"err");
   }
   $("suLogin").onclick=doStaffLogin;
@@ -598,9 +603,7 @@
   function applyPerms(){
     if(!currentUser)return;
     $("curUserName").textContent=currentUser.name||"";
-    const mgmt=can('report')||can('menu')||can('settings');
-    $("gearBtn").classList.toggle("hidden",!mgmt);
-    $("adminMenu").querySelectorAll('[data-go]').forEach(b=>b.classList.toggle("hidden",!can(b.dataset.go)));
+    $("gearBtn").classList.remove("hidden");
     if($("openTableBtn"))$("openTableBtn").classList.toggle("hidden",!can('order'));
     if($("dineQuickBtn"))$("dineQuickBtn").classList.toggle("hidden",!can('checkout'));
   }
@@ -614,12 +617,29 @@
 
   $("tabSell").onclick=()=>switchTab("sell"); $("tabDine").onclick=()=>switchTab("dine"); $("tabOrders").onclick=()=>switchTab("orders");
   function curStore(){ return stores.find(s=>s.id===storeId()); }
-  function openAdminMenu(){ $("adminMenu").classList.remove("hidden"); }
+  let elevatedPerms=null;
+  function canAdmin(p){ return can(p) || !!(elevatedPerms && elevatedPerms[p]); }
+  function openAdminMenu(){ $("adminMenu").querySelectorAll('[data-go]').forEach(b=>b.classList.toggle("hidden",!canAdmin(b.dataset.go))); $("adminMenu").classList.remove("hidden"); }
   $("gearBtn").onclick=(e)=>{
     e.stopPropagation();
     if(!$("adminMenu").classList.contains("hidden")){ $("adminMenu").classList.add("hidden"); return; }
-    openAdminMenu();
+    if(can('report')||can('menu')||can('settings')){ elevatedPerms=null; openAdminMenu(); }
+    else { openElev(); }
   };
+  function openElev(){ $("elName").value=""; $("elPin").value=""; hide($("elMsg")); $("elevModal").classList.remove("hidden"); setTimeout(()=>{try{$("elName").focus();}catch(e){}},60); }
+  $("elClose").onclick=()=>$("elevModal").classList.add("hidden");
+  $("elevModal").onclick=(e)=>{ if(e.target===$("elevModal"))$("elevModal").classList.add("hidden"); };
+  $("elConfirm").onclick=async()=>{
+    hide($("elMsg"));
+    const name=$("elName").value.trim(), pinv=$("elPin").value.trim();
+    if(!name||!pinv){ show($("elMsg"),t("need_name_pin"),"err"); return; }
+    const h=await sha256hex(pinv);
+    const u=users.find(x=>(x.name||"").trim().toLowerCase()===name.toLowerCase() && x.pin===h);
+    if(!u){ show($("elMsg"),t("login_bad"),"err"); return; }
+    if(!(u.perms&&(u.perms.report||u.perms.menu||u.perms.settings))){ show($("elMsg"),t("no_perm_acct"),"err"); return; }
+    elevatedPerms=u.perms; $("elevModal").classList.add("hidden"); openAdminMenu();
+  };
+  $("elPin").addEventListener("keydown",e=>{ if(e.key==="Enter")$("elConfirm").onclick(); });
   $("adminMenu").querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{ $("adminMenu").classList.add("hidden"); switchTab(b.dataset.go); });
   document.addEventListener('click',(e)=>{ if(!$("adminMenu").classList.contains("hidden") && !$("gearBtn").contains(e.target) && !e.target.closest('#adminMenu')) $("adminMenu").classList.add("hidden"); });
   let pinCheck=null;
@@ -633,17 +653,6 @@
     else { show($("pinMsg"),t("pin_wrong"),"err"); $("pinInput").value=""; $("pinInput").focus(); }
   };
   $("pinInput").addEventListener("keydown",e=>{ if(e.key==="Enter")$("pinConfirm").onclick(); });
-  $("savePinBtn").onclick=async()=>{
-    hide($("pinSaveMsg")); const st=curStore(); if(!st){ show($("pinSaveMsg"),t("need_store"),"err"); return; }
-    const v=$("setPinInput").value.trim(); let hash=null;
-    if(v){ if(!/^\d{4,6}$/.test(v)){ show($("pinSaveMsg"),t("pin_format"),"err"); return; } hash=await sha256hex(v); }
-    const b=$("savePinBtn"); b.disabled=true; b.textContent=t("adding");
-    const {error}=await sb.from("stores").update({admin_pin:hash}).eq("id",st.id);
-    b.disabled=false; b.textContent=t("save_pin");
-    if(error){ show($("pinSaveMsg"),t("fail")+error.message,"err"); return; }
-    st.admin_pin=hash; $("setPinInput").value=""; updatePinState(); show($("pinSaveMsg"),t("saved_ok"),"ok");
-  };
-  function updatePinState(){ const st=curStore(); if($("pinState"))$("pinState").textContent=(st&&st.admin_pin)?t("pin_set"):t("pin_none"); }
 
   async function loadUsers(){
     const sid=storeId(); if(!sid){ users=[]; renderUserList(); return; }
@@ -690,6 +699,7 @@
   async function delUser(id){ if(!confirm(t("del_user")))return; const {error}=await sb.from("app_users").delete().eq("id",id); if(error){ alert(error.message); return; } await loadUsers(); }
   renderPermForm();
   function switchTab(tab){
+    if(["sell","dine","orders"].includes(tab))elevatedPerms=null;
     const panes={sell:"sellTab",dine:"dineTab",orders:"ordersTab",report:"reportTab",menu:"menuTab",settings:"settingsTab"};
     for(const k in panes)$(panes[k]).classList.toggle("hidden",k!==tab);
     $("tabSell").classList.toggle("on",tab==="sell"); $("tabDine").classList.toggle("on",tab==="dine"); $("tabOrders").classList.toggle("on",tab==="orders");
@@ -710,7 +720,6 @@
   function showSetSub(w){
     $("ssStore").classList.toggle("on",w==="store"); $("ssTables").classList.toggle("on",w==="tables"); $("ssUsers").classList.toggle("on",w==="users"); $("ssNotify").classList.toggle("on",w==="notify"); $("ssAccount").classList.toggle("on",w==="account");
     $("setStore").classList.toggle("hidden",w!=="store"); $("setTables").classList.toggle("hidden",w!=="tables"); $("setUsers").classList.toggle("hidden",w!=="users"); $("setNotify").classList.toggle("hidden",w!=="notify"); $("setAccount").classList.toggle("hidden",w!=="account");
-    if(w==="account")updatePinState();
     if(w==="users"){ renderPermForm(); renderUserList(); }
   }
   $("ssStore").onclick=()=>showSetSub("store"); $("ssTables").onclick=()=>showSetSub("tables"); $("ssUsers").onclick=()=>showSetSub("users"); $("ssNotify").onclick=()=>showSetSub("notify"); $("ssAccount").onclick=()=>showSetSub("account");
