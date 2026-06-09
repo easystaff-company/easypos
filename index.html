@@ -177,8 +177,11 @@
   </div>
 
   <div class="card hidden" id="userSelectView">
-    <h1 data-i18n="pick_user">选择用户</h1>
-    <div class="tgrid" id="usList" style="margin-top:14px"></div>
+    <h1 data-i18n="staff_login">登录</h1><div class="sub" data-i18n="staff_login_sub">输入用户名和 PIN(老板用管理 PIN)</div>
+    <label data-i18n="user_name">用户名</label><input id="suName" autocomplete="off" data-ph="user_name_ph" placeholder="如:张三" />
+    <label data-i18n="pin_word">PIN</label><input id="suPin" type="password" inputmode="numeric" autocomplete="off" placeholder="••••" />
+    <button class="btn" id="suLogin" data-i18n="login_btn">登录</button>
+    <div class="msg err" id="suMsg"></div>
   </div>
 
   <div class="card hidden" id="appView">
@@ -522,7 +525,12 @@
     discount_w:{zh:"折扣",en:"Discount",it:"Sconto"},
     disc_amt:{zh:"减金额",en:"− Amount",it:"− Importo"},
     disc_pct:{zh:"减 %",en:"− %",it:"− %"},
-    disc_off:{zh:"无折扣",en:"None",it:"Nessuno"}
+    disc_off:{zh:"无折扣",en:"None",it:"Nessuno"},
+    staff_login:{zh:"登录",en:"Sign in",it:"Accedi"},
+    staff_login_sub:{zh:"输入用户名和 PIN(老板用管理 PIN)",en:"Enter name and PIN (owner uses admin PIN)",it:"Nome e PIN (titolare: PIN admin)"},
+    pin_word:{zh:"PIN",en:"PIN",it:"PIN"},
+    need_name_pin:{zh:"请输入用户名和 PIN",en:"Enter name and PIN",it:"Inserisci nome e PIN"},
+    login_bad:{zh:"用户名或 PIN 不对",en:"Wrong name or PIN",it:"Nome o PIN errati"}
   };
 
   const $=(id)=>document.getElementById(id);
@@ -565,26 +573,27 @@
     if(session){ $("loginView").classList.add("hidden"); $("userEmail").textContent=session.user.email; await loadStores(); loadNotifyConfig(); enterAfterLogin(); }
     else { currentUser=null; $("appView").classList.add("hidden"); $("userSelectView").classList.add("hidden"); $("loginView").classList.remove("hidden"); $("gearBtn").classList.add("hidden"); $("adminMenu").classList.add("hidden"); $("userBar").classList.add("hidden"); }
   }
-  function gateActive(){ const st=curStore(); return (users.length>0) || (st && st.admin_pin); }
+  function gateActive(){ const st=curStore(); return !!(st && st.admin_pin); }
   function setOwner(){ currentUser={owner:true,name:t("owner"),perms:{}}; }
   function enterAfterLogin(){
     if(gateActive()){ if(currentUser){ showApp(); } else { showUserSelect(); } }
     else { setOwner(); showApp(); }
   }
   function showApp(){ $("userSelectView").classList.add("hidden"); $("appView").classList.remove("hidden"); $("userBar").classList.toggle("hidden",!gateActive()); applyPerms(); }
-  function showUserSelect(){ $("appView").classList.add("hidden"); $("gearBtn").classList.add("hidden"); $("adminMenu").classList.add("hidden"); buildUserSelect(); $("userSelectView").classList.remove("hidden"); }
-  function buildUserSelect(){
-    const owner=`<button class="ttile" data-pickuser="__owner">${t("owner")}</button>`;
-    const staff=users.map(u=>`<button class="ttile" data-pickuser="${u.id}">${esc(u.name)}</button>`).join("");
-    $("usList").innerHTML=owner+staff;
-    $("usList").querySelectorAll('[data-pickuser]').forEach(b=>b.onclick=()=>pickUser(b.dataset.pickuser));
+  function showUserSelect(){ $("appView").classList.add("hidden"); $("gearBtn").classList.add("hidden"); $("adminMenu").classList.add("hidden"); $("suName").value=""; $("suPin").value=""; hide($("suMsg")); $("userSelectView").classList.remove("hidden"); setTimeout(()=>{try{$("suName").focus();}catch(e){}},60); }
+  async function doStaffLogin(){
+    hide($("suMsg"));
+    const name=$("suName").value.trim(), pinv=$("suPin").value.trim();
+    if(!name||!pinv){ show($("suMsg"),t("need_name_pin"),"err"); return; }
+    const h=await sha256hex(pinv);
+    const u=users.find(x=>(x.name||"").trim().toLowerCase()===name.toLowerCase() && x.pin===h);
+    if(u){ currentUser={id:u.id,name:u.name,perms:u.perms||{}}; showApp(); return; }
+    const st=curStore();
+    if(st && st.admin_pin && h===st.admin_pin){ setOwner(); showApp(); return; }
+    show($("suMsg"),t("login_bad"),"err");
   }
-  function pickUser(id){
-    if(id==="__owner"){ const st=curStore(); if(st&&st.admin_pin){ askPin(st.admin_pin,()=>{ setOwner(); showApp(); }); } else { setOwner(); showApp(); } return; }
-    const u=users.find(x=>x.id===id); if(!u)return;
-    if(u.pin){ askPin(u.pin,()=>{ currentUser={id:u.id,name:u.name,perms:u.perms||{}}; showApp(); }); }
-    else { currentUser={id:u.id,name:u.name,perms:u.perms||{}}; showApp(); }
-  }
+  $("suLogin").onclick=doStaffLogin;
+  $("suPin").addEventListener("keydown",e=>{ if(e.key==="Enter")doStaffLogin(); });
   $("lockBtn").onclick=()=>{ currentUser=null; showUserSelect(); };
   function applyPerms(){
     if(!currentUser)return;
