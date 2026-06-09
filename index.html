@@ -386,7 +386,8 @@
     table_word:{zh:"桌",en:"Table",it:"Tavolo"},add_items:{zh:"加菜",en:"Add items",it:"Aggiungi"},add_to_table:{zh:"加到桌",en:"Add to table",it:"Aggiungi al tavolo"},cancel_add:{zh:"取消加菜",en:"Cancel",it:"Annulla"},
     adding_to:{zh:"正在加菜:",en:"Adding to: ",it:"Aggiungi a: "},
     more:{zh:"更多",en:"More",it:"Altro"},
-    menu_settings:{zh:"菜单设置",en:"Menu setup",it:"Gestione menu"}
+    menu_settings:{zh:"菜单设置",en:"Menu setup",it:"Gestione menu"},
+    already_open_confirm:{zh:"已经开台了,把这些菜加到这桌吗?",en:"is already open. Add these items to it?",it:"è già aperto. Aggiungere questi articoli?"}
   };
 
   const $=(id)=>document.getElementById(id);
@@ -808,6 +809,18 @@
   };
   $("tpClose").onclick=()=>$("tblPickModal").classList.add("hidden");
   async function openTableWith(tableId){
+    const tname=(tables.find(x=>x.id===tableId)||{}).name||"";
+    const existing=openOrders.find(o=>o.table_id===tableId);
+    if(existing){
+      if(!confirm(t("table_word")+" "+tname+" "+t("already_open_confirm"))) return;
+      const items=cart.map(l=>({order_id:existing.id,product_id:l.product_id,name:l.name,price:l.price,qty:l.qty,line_total:+(l.price*l.qty).toFixed(2),options_text:l.options_text||null}));
+      const {error}=await sb.from("order_items").insert(items);
+      if(error){ alert(t("fail")+error.message); return; }
+      const added=cart.reduce((s,l)=>s+l.price*l.qty,0);
+      await sb.from("orders").update({total:+(Number(existing.total||0)+added).toFixed(2)}).eq("id",existing.id);
+      cart=[]; renderCart(); $("tblPickModal").classList.add("hidden"); loadOpenTables();
+      return;
+    }
     const total=cartTotal();
     const {data:order,error}=await sb.from("orders").insert({store_id:storeId(),order_type:"dine",status:"open",table_id:tableId,total:+total.toFixed(2)}).select().single();
     if(error){ alert(t("fail")+error.message); return; }
