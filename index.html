@@ -59,6 +59,10 @@
   .collapse-h .cnt{color:var(--gold);font-weight:800}
   .collapse-h .chev2{margin-left:auto;color:var(--muted);transition:transform .15s}
   .collapse-h.open .chev2{transform:rotate(180deg)}
+  .rline-r{display:flex;gap:12px;align-items:center;white-space:nowrap}
+  .voidbtn{color:var(--err);font-weight:700;cursor:pointer;font-size:13px}
+  #rsNote{width:100%;padding:12px 13px;border:none;border-radius:11px;background:var(--soft);color:var(--ink);font:inherit;font-size:16px;min-height:70px;resize:vertical;-webkit-appearance:none;outline:none}
+  #rsNote:focus{box-shadow:0 0 0 3px rgba(230,180,80,.32)}
   .subseg{display:flex;gap:8px;margin:0 0 16px}
   .subseg button{flex:1;padding:9px;border-radius:10px;background:var(--soft);color:var(--muted);font-weight:700;font-size:14px}
   .subseg button.on{background:rgba(230,180,80,.16);color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}
@@ -304,6 +308,16 @@
     <div class="total-row"><span data-i18n="total">合计</span><b id="tmTotal">€0.00</b></div>
     <button class="btn" id="tmSettle" data-i18n="checkout">结账</button>
     <button class="btn ghost" id="tmAdd" style="width:100%;margin-top:10px;text-align:center" data-i18n="add_items">加菜</button>
+    <button class="btn" id="tmDelete" style="width:100%;margin-top:10px;background:linear-gradient(180deg,#ff5a4d,#d63a2e);color:#fff" data-i18n="del_order">删除整单</button>
+  </div>
+</div>
+
+<div id="reasonModal" class="modal hidden">
+  <div class="sheet">
+    <div class="sheet-h"><b id="rsTitle"></b><span class="x" id="rsClose">✕</span></div>
+    <div id="rsSub" style="color:var(--muted);font-size:14px;margin-bottom:10px"></div>
+    <textarea id="rsNote" data-ph="reason_ph" placeholder="原因…"></textarea>
+    <button class="btn" id="rsConfirm" data-i18n="confirm_btn">确认</button>
   </div>
 </div>
 
@@ -387,7 +401,9 @@
     adding_to:{zh:"正在加菜:",en:"Adding to: ",it:"Aggiungi a: "},
     more:{zh:"更多",en:"More",it:"Altro"},
     menu_settings:{zh:"菜单设置",en:"Menu setup",it:"Gestione menu"},
-    already_open_confirm:{zh:"已经开台了,把这些菜加到这桌吗?",en:"is already open. Add these items to it?",it:"è già aperto. Aggiungere questi articoli?"}
+    already_open_confirm:{zh:"已经开台了,把这些菜加到这桌吗?",en:"is already open. Add these items to it?",it:"è già aperto. Aggiungere questi articoli?"},
+    void_btn:{zh:"撤",en:"Void",it:"Storna"},void_item:{zh:"撤菜",en:"Void item",it:"Storna articolo"},del_order:{zh:"删除整单",en:"Delete order",it:"Elimina ordine"},
+    reason_ph:{zh:"原因…",en:"Reason…",it:"Motivo…"},confirm_btn:{zh:"确认",en:"Confirm",it:"Conferma"}
   };
 
   const $=(id)=>document.getElementById(id);
@@ -773,10 +789,39 @@
   function openTableDetail(id){
     const o=openOrders.find(x=>x.id===id); if(!o)return; curOpen=o;
     $("tmTitle").textContent=t("table_word")+" "+(o.tables?o.tables.name:"—");
-    $("tmItems").innerHTML=(o.order_items||[]).map(i=>`<div class="rline"><span>${esc(i.name)}${i.options_text?` (${esc(i.options_text)})`:""} ×${i.qty}</span><span>${money(i.line_total)}</span></div>`).join("")||`<div class="empty">—</div>`;
+    $("tmItems").innerHTML=(o.order_items||[]).map(i=>`<div class="rline"><span>${esc(i.name)}${i.options_text?` (${esc(i.options_text)})`:""} ×${i.qty}</span><span class="rline-r">${money(i.line_total)} <span class="voidbtn" data-iid="${i.id}" data-nm="${esc(i.name)}" data-amt="${i.line_total}" data-qty="${i.qty}" data-opt="${esc(i.options_text||'')}">${t("void_btn")}</span></span></div>`).join("")||`<div class="empty">—</div>`;
     $("tmTotal").textContent=money(orderTotal(o));
+    $("tmItems").querySelectorAll('.voidbtn').forEach(b=>b.onclick=()=>voidItem(o,b.dataset));
     $("tblModal").classList.remove("hidden");
   }
+  let reasonCb=null;
+  function askReason(title,sub,cb){ $("rsTitle").textContent=title; $("rsSub").textContent=sub||""; $("rsNote").value=""; reasonCb=cb; $("reasonModal").classList.remove("hidden"); setTimeout(()=>$("rsNote").focus(),60); }
+  $("rsClose").onclick=()=>$("reasonModal").classList.add("hidden");
+  $("reasonModal").onclick=(e)=>{ if(e.target===$("reasonModal"))$("reasonModal").classList.add("hidden"); };
+  $("rsConfirm").onclick=()=>{ const note=$("rsNote").value.trim(); if(!note){ $("rsNote").focus(); return; } $("reasonModal").classList.add("hidden"); const cb=reasonCb; reasonCb=null; if(cb)cb(note); };
+  function voidItem(o,d){
+    const label=d.nm+(d.opt?` (${d.opt})`:"")+" ×"+d.qty;
+    askReason(t("void_item"),label,async(note)=>{
+      const {error}=await sb.from("order_items").delete().eq("id",d.iid);
+      if(error){ alert(t("fail")+error.message); return; }
+      const newTotal=Math.max(0,Number(o.total||0)-Number(d.amt));
+      await sb.from("orders").update({total:+newTotal.toFixed(2)}).eq("id",o.id);
+      await sb.from("audit_log").insert({store_id:storeId(),action:t("void_item")+" · "+t("table_word")+" "+(o.tables?o.tables.name:"—"),detail:label+" — "+note,amount:Number(d.amt)});
+      await loadOpenTables();
+      const fresh=openOrders.find(x=>x.id===o.id);
+      if(fresh)openTableDetail(fresh.id); else $("tblModal").classList.add("hidden");
+    });
+  }
+  $("tmDelete").onclick=()=>{
+    if(!curOpen)return; const o=curOpen; const tname=o.tables?o.tables.name:"—"; const tot=orderTotal(o);
+    askReason(t("del_order")+" · "+t("table_word")+" "+tname,money(tot),async(note)=>{
+      await sb.from("order_items").delete().eq("order_id",o.id);
+      const {error}=await sb.from("orders").delete().eq("id",o.id);
+      if(error){ alert(t("fail")+error.message); return; }
+      await sb.from("audit_log").insert({store_id:storeId(),action:t("del_order")+" · "+t("table_word")+" "+tname,detail:note,amount:tot});
+      $("tblModal").classList.add("hidden"); loadOpenTables();
+    });
+  };
   $("tmClose").onclick=()=>$("tblModal").classList.add("hidden");
   $("tmSettle").onclick=()=>{ $("tblModal").classList.add("hidden"); openPay({kind:"settle",orderId:curOpen.id,total:orderTotal(curOpen)}); };
   $("tmAdd").onclick=()=>{ $("tblModal").classList.add("hidden"); enterAddMode(curOpen); };
