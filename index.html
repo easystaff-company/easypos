@@ -309,6 +309,7 @@
     <button class="btn" id="tmSettle" data-i18n="checkout">结账</button>
     <button class="btn ghost" id="tmSplit" style="width:100%;margin-top:10px;text-align:center" data-i18n="split_items">选菜结账</button>
     <button class="btn ghost" id="tmAdd" style="width:100%;margin-top:10px;text-align:center" data-i18n="add_items">加菜</button>
+    <div class="row2" style="margin-top:10px"><button class="btn ghost" id="tmMove" style="width:100%;margin:0" data-i18n="move_table">换桌</button><button class="btn ghost" id="tmMerge" style="width:100%;margin:0" data-i18n="merge_table">拼桌</button></div>
     <button class="btn" id="tmDelete" style="width:100%;margin-top:10px;background:linear-gradient(180deg,#ff5a4d,#d63a2e);color:#fff" data-i18n="del_order">删除整单</button>
   </div>
 </div>
@@ -346,6 +347,14 @@
     <div class="total-row"><span data-i18n="this_pay">本次应付</span><b id="spTotal">€0.00</b></div>
     <button class="btn" id="spPay" data-i18n="go_pay">去结账</button>
     <div class="msg" id="spMsg"></div>
+  </div>
+</div>
+
+<div id="mvModal" class="modal hidden">
+  <div class="sheet">
+    <div class="sheet-h"><b id="mvTitle"></b><span class="x" id="mvClose">✕</span></div>
+    <div class="tgrid" id="mvList" style="margin-top:6px"></div>
+    <div class="msg" id="mvMsg"></div>
   </div>
 </div>
 
@@ -425,7 +434,16 @@
     this_pay:{zh:"本次应付",en:"This payment",it:"Da pagare ora"},
     go_pay:{zh:"去结账",en:"Go to pay",it:"Vai al pagamento"},
     pick_some:{zh:"先选要付的份数(点 +)",en:"Pick quantities to pay (tap +)",it:"Seleziona le quantità (tocca +)"},
-    each_word:{zh:"每份",en:"each",it:"cad."}
+    each_word:{zh:"每份",en:"each",it:"cad."},
+    move_table:{zh:"换桌",en:"Move table",it:"Sposta tavolo"},
+    merge_table:{zh:"拼桌",en:"Merge tables",it:"Unisci tavoli"},
+    move_to_title:{zh:"换到哪一桌",en:"Move to which table",it:"Sposta su quale tavolo"},
+    merge_into_title:{zh:"把哪桌并过来",en:"Merge which table in",it:"Unisci quale tavolo"},
+    busy_word:{zh:"已开台",en:"busy",it:"occupato"},
+    no_free_table:{zh:"没有其他桌位",en:"No other tables",it:"Nessun altro tavolo"},
+    no_other_open:{zh:"没有其他开着的桌",en:"No other open tables",it:"Nessun altro tavolo aperto"},
+    move_occupied_confirm:{zh:"目标桌已开台,把这桌并过去吗?",en:"Target table is busy — merge this one into it?",it:"Tavolo occupato — unire questo a quello?"},
+    merge_confirm:{zh:"把「{b}」的菜并到「{a}」吗?",en:"Merge “{b}” into “{a}”?",it:"Unire “{b}” in “{a}”?"}
   };
 
   const $=(id)=>document.getElementById(id);
@@ -1012,6 +1030,60 @@
     const total=splitSubtotal(); $("splitModal").classList.add("hidden");
     openPay({source:"split",orderId:curOpen.id,total,tableId:curOpen.table_id,items});
   };
+
+  // ---- 换桌 / 拼桌 ----
+  async function mergeOrders(keep,drop){
+    await sb.from("order_items").update({order_id:keep.id}).eq("order_id",drop.id);
+    const {data:items}=await sb.from("order_items").select("line_total").eq("order_id",keep.id);
+    const tot=(items||[]).reduce((s,r)=>s+Number(r.line_total),0);
+    await sb.from("orders").update({total:+tot.toFixed(2)}).eq("id",keep.id);
+    await sb.from("orders").delete().eq("id",drop.id);
+  }
+  $("mvClose").onclick=()=>$("mvModal").classList.add("hidden");
+  $("mvModal").onclick=(e)=>{ if(e.target===$("mvModal"))$("mvModal").classList.add("hidden"); };
+
+  $("tmMove").onclick=()=>{
+    const o=curOpen; if(!o)return;
+    const occupied=new Set(openOrders.map(x=>x.table_id));
+    const others=tables.filter(tb=>tb.id!==o.table_id);
+    $("tblModal").classList.add("hidden"); hide($("mvMsg")); $("mvTitle").textContent=t("move_to_title");
+    $("mvList").innerHTML=others.length?others.map(tb=>{ const busy=occupied.has(tb.id);
+      return `<button class="ttile" data-mv="${tb.id}" data-busy="${busy?1:0}">${esc(tb.name)}${busy?`<div style="font-size:11px;color:var(--muted);font-weight:600;margin-top:4px">${t("busy_word")}</div>`:""}</button>`; }).join("")
+      :`<div class="empty" style="grid-column:1/-1">${t("no_free_table")}</div>`;
+    $("mvList").querySelectorAll('[data-mv]').forEach(c=>c.onclick=()=>doMove(c.dataset.mv,c.dataset.busy==="1"));
+    $("mvModal").classList.remove("hidden");
+  };
+  async function doMove(targetId,busy){
+    const o=curOpen; if(!o)return;
+    if(busy){
+      const target=openOrders.find(x=>x.table_id===targetId);
+      if(!target)return;
+      if(!confirm(t("move_occupied_confirm")))return;
+      await mergeOrders(target,o);
+      $("mvModal").classList.add("hidden"); loadOpenTables(); return;
+    }
+    const {error}=await sb.from("orders").update({table_id:targetId}).eq("id",o.id);
+    if(error){ show($("mvMsg"),t("fail")+error.message,"err"); return; }
+    $("mvModal").classList.add("hidden"); loadOpenTables();
+  }
+
+  $("tmMerge").onclick=()=>{
+    const o=curOpen; if(!o)return;
+    const others=openOrders.filter(x=>x.id!==o.id);
+    $("tblModal").classList.add("hidden"); hide($("mvMsg")); $("mvTitle").textContent=t("merge_into_title");
+    $("mvList").innerHTML=others.length?others.map(ord=>{ const nm=ord.tables?ord.tables.name:"—";
+      return `<button class="ttile" data-mg="${ord.id}">${esc(nm)}<div style="font-size:11px;color:var(--muted);font-weight:600;margin-top:4px">${money(orderTotal(ord))}</div></button>`; }).join("")
+      :`<div class="empty" style="grid-column:1/-1">${t("no_other_open")}</div>`;
+    $("mvList").querySelectorAll('[data-mg]').forEach(c=>c.onclick=()=>doMerge(c.dataset.mg));
+    $("mvModal").classList.remove("hidden");
+  };
+  async function doMerge(otherId){
+    const o=curOpen; const other=openOrders.find(x=>x.id===otherId); if(!o||!other)return;
+    const aName=o.tables?o.tables.name:"—", bName=other.tables?other.tables.name:"—";
+    if(!confirm(t("merge_confirm",{a:aName,b:bName})))return;
+    await mergeOrders(o,other);
+    $("mvModal").classList.add("hidden"); loadOpenTables();
+  }
 
   render();
 </script>
