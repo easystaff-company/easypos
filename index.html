@@ -191,7 +191,7 @@
   </div>
 
   <div class="card hidden" id="appView">
-    <div id="userBar" class="hidden" style="display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:10px"><span><span data-i18n="cur_user">当前</span>: <b id="curUserName" style="color:var(--ink)"></b></span><button id="lockBtn" class="btn ghost" style="padding:6px 12px;font-size:13px;margin:0" data-i18n="lock_switch">锁定 / 换人</button></div>
+    <div id="userBar" class="hidden" style="font-size:13px;color:var(--muted);margin-bottom:10px"><span data-i18n="cur_user">当前</span>: <b id="curUserName" style="color:var(--ink)"></b></div>
     <div class="seg"><button id="tabSell" class="on" data-i18n="tab_sell">收银</button><button id="tabDine" data-i18n="tab_dine">点菜</button><button id="tabOrders" data-i18n="tab_orders">订单</button></div>
 
     <div id="sellTab">
@@ -315,6 +315,7 @@
       <button class="btn" id="repExportOrders" data-i18n="export_orders">导出订单 CSV</button>
       <button class="btn ghost" id="repExportItems" style="width:100%;margin-top:10px;text-align:center" data-i18n="export_items">导出菜品汇总 CSV</button>
     </div>
+    <button id="lockBtn" class="btn ghost hidden" style="width:100%;text-align:center;margin-top:24px;color:var(--muted)" data-i18n="lock_switch">锁定 / 换人</button>
   </div>
 </div>
 
@@ -514,6 +515,7 @@
     owner:{zh:"老板",en:"Owner",it:"Titolare"},
     cur_user:{zh:"当前",en:"Current",it:"Attuale"},
     lock_switch:{zh:"锁定 / 换人",en:"Lock / switch",it:"Blocca / cambia"},
+    lock_confirm:{zh:"锁定并切换用户?需要重新登录。",en:"Lock and switch user? You'll need to log in again.",it:"Bloccare e cambiare utente? Dovrai riaccedere."},
     pick_user:{zh:"选择用户",en:"Select user",it:"Seleziona utente"},
     set_users:{zh:"用户",en:"Users",it:"Utenti"},
     user_name:{zh:"用户名",en:"User name",it:"Nome utente"},
@@ -597,7 +599,7 @@
     if(gateActive()){ if(currentUser){ showApp(); } else { showUserSelect(); } }
     else { setOwner(); showApp(); }
   }
-  function showApp(){ $("userSelectView").classList.add("hidden"); $("appView").classList.remove("hidden"); $("userBar").classList.toggle("hidden",!gateActive()); applyPerms(); }
+  function showApp(){ $("userSelectView").classList.add("hidden"); $("appView").classList.remove("hidden"); $("userBar").classList.toggle("hidden",!gateActive()); $("lockBtn").classList.toggle("hidden",!gateActive()); applyPerms(); }
   function showUserSelect(){ $("appView").classList.add("hidden"); $("gearBtn").classList.add("hidden"); $("adminMenu").classList.add("hidden"); $("suName").value=""; $("suPin").value=""; hide($("suMsg")); $("ownerBox").classList.add("hidden"); $("ownerPw").value=""; hide($("ownerMsg")); $("userSelectView").classList.remove("hidden"); setTimeout(()=>{try{$("suName").focus();}catch(e){}},60); }
   async function doStaffLogin(){
     hide($("suMsg"));
@@ -625,7 +627,7 @@
   }
   $("ownerLoginBtn").onclick=doOwnerLogin;
   $("ownerPw").addEventListener("keydown",e=>{ if(e.key==="Enter")doOwnerLogin(); });
-  $("lockBtn").onclick=()=>{ currentUser=null; showUserSelect(); };
+  $("lockBtn").onclick=()=>{ if(!confirm(t("lock_confirm")))return; currentUser=null; showUserSelect(); };
   function applyPerms(){
     if(!currentUser)return;
     $("curUserName").textContent=currentUser.name||"";
@@ -1137,7 +1139,9 @@
   $("openTableBtn").onclick=()=>{
     if(!cart.length)return;
     if(!tables.length){ alert(t("no_tables_set")); return; }
-    $("tblPickList").innerHTML=tables.map(tb=>`<button class="ttile" data-pick="${tb.id}">${esc(tb.name)}</button>`).join("");
+    const occ=occupiedSet();
+    $("tblPickList").innerHTML=tables.map(tb=>{ const busy=occ.has(tb.id);
+      return `<button class="ttile" data-pick="${tb.id}">${esc(tb.name)}${busy?`<div style="font-size:11px;color:var(--muted);font-weight:600;margin-top:4px">${t("busy_word")}</div>`:""}</button>`; }).join("");
     $("tblPickList").querySelectorAll('[data-pick]').forEach(c=>c.onclick=()=>openTableWith(c.dataset.pick));
     $("tblPickModal").classList.remove("hidden");
   };
