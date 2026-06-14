@@ -128,6 +128,18 @@
   .rline{display:flex;justify-content:space-between;font-size:14px;padding:3px 0;gap:10px}
   .rtot{font-weight:800;border-top:1px solid var(--line);margin-top:6px;padding-top:8px}
   .rnote{margin-top:10px;text-align:center;color:var(--muted);font-size:11px}
+  #printArea{display:none}
+  @media print{
+    body > *:not(#printArea){display:none !important}
+    #printArea{display:block !important;position:static;background:#fff;color:#000}
+    .sc{font-family:'Courier New',monospace;color:#000;width:100%;max-width:300px;margin:0 auto;padding:8px}
+    .sc .sc-t{text-align:center;font-weight:700;font-size:16px}
+    .sc .sc-sub{text-align:center;font-size:11px;margin:2px 0}
+    .sc .sc-hr{border-top:1px dashed #000;margin:8px 0}
+    .sc .sc-l{display:flex;justify-content:space-between;font-size:13px;padding:2px 0;gap:10px}
+    .sc .sc-tot{font-weight:700;font-size:15px;border-top:1px solid #000;margin-top:6px;padding-top:6px}
+    .sc .sc-note{text-align:center;font-size:10px;margin-top:10px}
+  }
   details{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}
   summary{color:var(--gold);font-size:14px;font-weight:700;cursor:pointer;padding:8px 0;list-style:none}
   summary::-webkit-details-marker{display:none}
@@ -458,6 +470,7 @@
     today:{zh:"今日",en:"Today",it:"Oggi"},orders_unit:{zh:"单",en:"orders",it:"ordini"},items_word:{zh:"件",en:"items",it:"art."},
     no_orders:{zh:"还没有订单",en:"No orders yet",it:"Nessun ordine"},paid_cash:{zh:"收现金",en:"Cash paid",it:"Contanti"},
     receipt_note:{zh:"内部凭证 · 非正式税务小票",en:"Internal record · not a fiscal receipt",it:"Documento interno · non valido fiscalmente"},
+    print_btn:{zh:"🖨 打印小票",en:"🖨 Print receipt",it:"🖨 Stampa scontrino"},
     all:{zh:"全部",en:"All",it:"Tutti"},cart:{zh:"购物车",en:"Cart",it:"Carrello"},cart_empty:{zh:"点上面的菜品加入",en:"Tap items above to add",it:"Tocca i prodotti sopra"},
     total:{zh:"合计",en:"Total",it:"Totale"},checkout:{zh:"结账",en:"Checkout",it:"Paga"},
     cash_received:{zh:"收到现金 €",en:"Cash received €",it:"Contanti ricevuti €"},change:{zh:"找零",en:"Change",it:"Resto"},
@@ -1026,10 +1039,33 @@
           <div class="rline rtot"><span>${t("total")}</span><span>${money(o.total)}</span></div>
           <div class="rline"><span>${t("pay_method")}</span><span>${o.payment_method==="card"?t("pay_card"):t("pay_cash")}</span></div>
           ${o.payment_method==="cash"?`<div class="rline"><span>${t("paid_cash")}</span><span>${money(o.cash_received)}</span></div><div class="rline"><span>${t("change")}</span><span>${money(o.change_given)}</span></div>`:""}
-          <div class="rnote">${t("receipt_note")}</div></div></div></div>`;
+          <div class="rnote">${t("receipt_note")}</div></div>
+          <button class="btn" data-print="${o.id}" style="width:100%;margin-top:10px">${t("print_btn")}</button></div></div>`;
     }).join("");
     list.querySelectorAll('.ohead').forEach(h=>h.onclick=()=>{ const d=$("od-"+h.dataset.o); d.classList.toggle("hidden"); h.querySelector('.chev').textContent=d.classList.contains("hidden")?"▸":"▾"; });
+    list.querySelectorAll('[data-print]').forEach(b=>b.onclick=(e)=>{ e.stopPropagation(); printScontrino(data.find(x=>x.id===b.dataset.print)); });
   }
+  function scontrinoHTML(o){
+    const store=curStore()||{};
+    const it=k=>(I18N[k]&&I18N[k].it)||k;
+    const dt=new Date(o.created_at).toLocaleString('it-IT');
+    const lines=(o.order_items||[]).map(i=>{ const nm=(i.product_id===null)?"Coperto":i.name; return `<div class="sc-l"><span>${esc(nm)}${i.options_text?` (${esc(i.options_text)})`:""} ×${i.qty}</span><span>${money(i.line_total)}</span></div>`; }).join("");
+    const pay=o.payment_method==="card"?it("pay_card"):it("pay_cash");
+    const cashRows=o.payment_method==="cash"?`<div class="sc-l"><span>${it("paid_cash")}</span><span>${money(o.cash_received)}</span></div><div class="sc-l"><span>${it("change")}</span><span>${money(o.change_given)}</span></div>`:"";
+    return `<div class="sc">
+      <div class="sc-t">${esc(store.company_name||store.name||"")}</div>
+      ${store.address?`<div class="sc-sub">${esc(store.address)}</div>`:""}
+      ${store.vat_number?`<div class="sc-sub">P.IVA ${esc(store.vat_number)}</div>`:""}
+      <div class="sc-sub">${dt}</div>
+      <div class="sc-hr"></div>
+      ${lines}
+      <div class="sc-l sc-tot"><span>${it("total")}</span><span>${money(o.total)}</span></div>
+      <div class="sc-l"><span>${it("pay_method")}</span><span>${pay}</span></div>
+      ${cashRows}
+      <div class="sc-note">${it("receipt_note")}</div>
+    </div>`;
+  }
+  function printScontrino(o){ if(!o)return; $("printArea").innerHTML=scontrinoHTML(o); setTimeout(()=>{ window.print(); },40); }
 
   $("addCatBtn").onclick=async()=>{
     const sid=storeId(); const name=$("catName").value.trim();
@@ -1203,7 +1239,7 @@
     if(n===0){ if(cl){ const {error}=await sb.from("order_items").delete().eq("id",cl.id); if(error){alert(t("fail")+error.message);return;} } }
     else { const lt=+(unit*n).toFixed(2);
       if(cl){ const {error}=await sb.from("order_items").update({qty:n,line_total:lt}).eq("id",cl.id); if(error){alert(t("fail")+error.message);return;} }
-      else { const {error}=await sb.from("order_items").insert({order_id:o.id,product_id:null,name:t("coperto_word"),price:unit,qty:n,line_total:lt,options_text:null}); if(error){alert(t("fail")+error.message);return;} } }
+      else { const {error}=await sb.from("order_items").insert({order_id:o.id,product_id:null,name:"Coperto",price:unit,qty:n,line_total:lt,options_text:null}); if(error){alert(t("fail")+error.message);return;} } }
     const {data:rows}=await sb.from("order_items").select("line_total").eq("order_id",o.id);
     const tot=(rows||[]).reduce((s,r)=>s+Number(r.line_total),0);
     await sb.from("orders").update({total:+tot.toFixed(2)}).eq("id",o.id);
@@ -1298,7 +1334,7 @@
     const {data:order,error}=await sb.from("orders").insert({store_id:storeId(),order_type:"dine",status:"open",table_id:tableId,total:+total.toFixed(2)}).select().single();
     if(error){ alert(t("fail")+error.message); return; }
     const items=cart.map(l=>({order_id:order.id,product_id:l.product_id,name:l.name,price:l.price,qty:l.qty,line_total:+(l.price*l.qty).toFixed(2),options_text:l.options_text||null}));
-    if(copTotal>0)items.unshift({order_id:order.id,product_id:null,name:t("coperto_word"),price:cop,qty:cov,line_total:copTotal,options_text:null});
+    if(copTotal>0)items.unshift({order_id:order.id,product_id:null,name:"Coperto",price:cop,qty:cov,line_total:copTotal,options_text:null});
     const {error:e2}=await sb.from("order_items").insert(items);
     if(e2){ alert(t("fail")+e2.message); return; }
     cart=[]; renderCart(); $("tblPickModal").classList.add("hidden"); loadOpenTables();
@@ -1477,5 +1513,6 @@
 
   render();
 </script>
+<div id="printArea"></div>
 </body>
 </html>
