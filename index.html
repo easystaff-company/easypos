@@ -219,6 +219,11 @@
       <div id="cart2"></div>
       <div class="total-row"><span data-i18n="total">合计</span><b id="cartTotal2">€0.00</b></div>
       <div id="dineActions">
+        <div id="coverRow" class="hidden" style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+          <span style="color:var(--muted);font-size:14px;font-weight:600" data-i18n="covers_label">人数</span>
+          <span class="stepper"><button id="coverMinus" type="button">−</button><span class="q" id="coverN">1</span><button id="coverPlus" type="button">+</button></span>
+          <span style="color:var(--gold);font-size:13px;font-weight:700" id="copertoHint"></span>
+        </div>
         <button class="btn" id="openTableBtn" disabled data-i18n="open_table_btn">开桌</button>
         <button class="btn ghost" id="dineQuickBtn" disabled style="width:100%;margin-top:10px;text-align:center" data-i18n="pay_now_btn">直接收钱</button>
       </div>
@@ -277,6 +282,11 @@
         <div class="row2"><div><label data-i18n="address_opt">地址(可选)</label><input id="storeAddr" placeholder="Venezia…" /></div><div><label data-i18n="piva_opt">P.IVA(可选)</label><input id="storeVat" placeholder="IT…" /></div></div>
         <button class="btn" id="addStoreBtn" data-i18n="add_store">添加店铺</button>
         <div class="msg" id="storeMsg"></div>
+        <div class="section-t" data-i18n="coperto_t" style="margin-top:18px">座位费 Coperto</div>
+        <label data-i18n="coperto_label">每位金额 €(0 = 不收)</label>
+        <input id="copertoInput" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0.00" />
+        <button class="btn" id="saveCopertoBtn" data-i18n="save_coperto">保存座位费</button>
+        <div class="msg" id="copertoMsg"></div>
       </div>
 
       <div id="setTables" class="hidden">
@@ -524,6 +534,11 @@
     lock_confirm:{zh:"锁定并切换用户?需要重新登录。",en:"Lock and switch user? You'll need to log in again.",it:"Bloccare e cambiare utente? Dovrai riaccedere."},
     search_ph:{zh:"搜索菜品…",en:"Search items…",it:"Cerca prodotti…"},
     init_retry:{zh:"加载失败,可能是网络问题。请重新登录或刷新页面再试。",en:"Loading failed, likely a network issue. Please log in again or refresh.",it:"Caricamento fallito, probabilmente di rete. Accedi di nuovo o aggiorna."},
+    coperto_t:{zh:"座位费 Coperto",en:"Cover charge (Coperto)",it:"Coperto"},
+    coperto_label:{zh:"每位金额 €(0 = 不收)",en:"Per person € (0 = off)",it:"€ a persona (0 = disattivato)"},
+    save_coperto:{zh:"保存座位费",en:"Save cover charge",it:"Salva coperto"},
+    covers_label:{zh:"人数",en:"Covers",it:"Coperti"},
+    coperto_word:{zh:"座位费",en:"Coperto",it:"Coperto"},
     pick_user:{zh:"选择用户",en:"Select user",it:"Seleziona utente"},
     set_users:{zh:"用户",en:"Users",it:"Utenti"},
     user_name:{zh:"用户名",en:"User name",it:"Nome utente"},
@@ -783,7 +798,7 @@
     await reloadStore();
   }
   $("storeSel").onchange=reloadStore;
-  async function reloadStore(){ cart=[]; renderCart(); await loadCategories(); await loadGroups(); await loadPmg(); await loadProducts(); await loadTables(); await loadUsers(); await loadToday(); loadOpenTables(); applyPerms(); }
+  async function reloadStore(){ cart=[]; renderCart(); const cs=curStore(); if($("copertoInput"))$("copertoInput").value=(cs&&Number(cs.coperto))?Number(cs.coperto):""; refreshCoverRow(); await loadCategories(); await loadGroups(); await loadPmg(); await loadProducts(); await loadTables(); await loadUsers(); await loadToday(); loadOpenTables(); applyPerms(); }
 
   async function loadCategories(){
     const sid=storeId(); if(!sid)return;
@@ -906,6 +921,19 @@
   $("prodSearch").oninput=()=>{ searchQuery=$("prodSearch").value.trim().toLowerCase(); renderGrid(); };
   $("mProdSearch").oninput=()=>{ mProdSearch=$("mProdSearch").value.trim().toLowerCase(); renderProdList(); };
   $("cartJump").onclick=()=>{ const a=$("cartAnchor"); if(a)a.scrollIntoView({behavior:"smooth",block:"start"}); };
+  function copertoPrice(){ return Number((curStore()||{}).coperto)||0; }
+  function coverCount(){ return Math.max(1, parseInt($("coverN").textContent,10)||1); }
+  function updateCoverHint(){ const cp=copertoPrice(); const n=coverCount(); if($("coverN"))$("coverN").textContent=n; if($("copertoHint"))$("copertoHint").textContent=cp>0?`× ${money(cp)} = ${money(cp*n)}`:""; }
+  function refreshCoverRow(){ const show=copertoPrice()>0; if($("coverRow"))$("coverRow").classList.toggle("hidden",!show); updateCoverHint(); }
+  $("coverMinus").onclick=()=>{ $("coverN").textContent=Math.max(1,coverCount()-1); updateCoverHint(); };
+  $("coverPlus").onclick=()=>{ $("coverN").textContent=coverCount()+1; updateCoverHint(); };
+  $("saveCopertoBtn").onclick=async()=>{
+    const st=curStore(); if(!st){ show($("copertoMsg"),t("need_store"),"err"); return; }
+    const v=parseFloat($("copertoInput").value); const val=isNaN(v)?0:Math.max(0,v);
+    const {error}=await sb.from("stores").update({coperto:val}).eq("id",st.id);
+    if(error){ show($("copertoMsg"),t("fail")+error.message,"err"); return; }
+    st.coperto=val; show($("copertoMsg"),t("saved_ok"),"ok"); refreshCoverRow();
+  };
 
   function tapProduct(pid){ const p=products.find(x=>x.id===pid); if(!p)return; const gs=groupsForProduct(pid); if(gs.length) openOptions(p,gs); else addLine({key:p.id,product_id:p.id,name:p.name,price:Number(p.price),qty:1,options_text:null}); }
 
@@ -1219,13 +1247,17 @@
       cart=[]; renderCart(); $("tblPickModal").classList.add("hidden"); loadOpenTables();
       return;
     }
-    const total=cartTotal();
+    const cop=copertoPrice();
+    const cov=cop>0?coverCount():0;
+    const copTotal=(cop>0&&cov>0)?+(cop*cov).toFixed(2):0;
+    const total=cartTotal()+copTotal;
     const {data:order,error}=await sb.from("orders").insert({store_id:storeId(),order_type:"dine",status:"open",table_id:tableId,total:+total.toFixed(2)}).select().single();
     if(error){ alert(t("fail")+error.message); return; }
     const items=cart.map(l=>({order_id:order.id,product_id:l.product_id,name:l.name,price:l.price,qty:l.qty,line_total:+(l.price*l.qty).toFixed(2),options_text:l.options_text||null}));
+    if(copTotal>0)items.unshift({order_id:order.id,product_id:null,name:t("coperto_word"),price:cop,qty:cov,line_total:copTotal,options_text:null});
     const {error:e2}=await sb.from("order_items").insert(items);
     if(e2){ alert(t("fail")+e2.message); return; }
-    cart=[]; renderCart(); $("tblPickModal").classList.add("hidden"); loadOpenTables();
+    cart=[]; $("coverN").textContent="1"; updateCoverHint(); renderCart(); $("tblPickModal").classList.add("hidden"); loadOpenTables();
   }
   $("dineQuickBtn").onclick=()=>{ if(!cart.length)return; openPay({source:"quick",total:cartTotal(),tableId:null,items:cart.map(l=>({product_id:l.product_id,name:l.name,price:Number(l.price),qty:Number(l.qty),options_text:l.options_text||null}))}); };
 
