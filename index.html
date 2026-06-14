@@ -219,11 +219,6 @@
       <div id="cart2"></div>
       <div class="total-row"><span data-i18n="total">合计</span><b id="cartTotal2">€0.00</b></div>
       <div id="dineActions">
-        <div id="coverRow" class="hidden" style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-          <span style="color:var(--muted);font-size:14px;font-weight:600" data-i18n="covers_label">人数</span>
-          <span class="stepper"><button id="coverMinus" type="button">−</button><span class="q" id="coverN">1</span><button id="coverPlus" type="button">+</button></span>
-          <span style="color:var(--gold);font-size:13px;font-weight:700" id="copertoHint"></span>
-        </div>
         <button class="btn" id="openTableBtn" disabled data-i18n="open_table_btn">开桌</button>
         <button class="btn ghost" id="dineQuickBtn" disabled style="width:100%;margin-top:10px;text-align:center" data-i18n="pay_now_btn">直接收钱</button>
       </div>
@@ -352,10 +347,28 @@
   </div>
 </div>
 
+<div id="coverModal" class="modal hidden">
+  <div class="sheet">
+    <div class="sheet-h"><b data-i18n="covers_q">几位?</b><span class="x" id="cmClose">✕</span></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin:16px 0">
+      <span class="stepper" style="font-size:18px"><button id="cmMinus" type="button">−</button><span class="q" id="cmN">1</span><button id="cmPlus" type="button">+</button></span>
+      <span style="color:var(--gold);font-weight:800;font-size:15px" id="cmHint"></span>
+    </div>
+    <button class="btn" id="cmOk" data-i18n="open_table_btn">开桌</button>
+  </div>
+</div>
+
 <div id="tblModal" class="modal hidden">
   <div class="sheet">
     <div class="sheet-h"><b id="tmTitle"></b><span class="x" id="tmClose">✕</span></div>
     <div id="tmItems" style="margin-top:6px"></div>
+    <div id="tmCopertoBox" class="hidden" style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0;padding:9px 11px;background:#1c1c22;border-radius:11px">
+      <span style="color:var(--muted);font-size:14px;font-weight:700" data-i18n="coperto_t">座位费</span>
+      <span style="display:flex;align-items:center;gap:10px">
+        <span class="stepper"><button id="tmCovMinus" type="button">−</button><span class="q" id="tmCovN">0</span><button id="tmCovPlus" type="button">+</button></span>
+        <button class="btn sm" id="tmCovSave" style="margin:0;width:auto" data-i18n="save_btn">保存</button>
+      </span>
+    </div>
     <div class="total-row"><span data-i18n="total">合计</span><b id="tmTotal">€0.00</b></div>
     <button class="btn" id="tmSettle" data-i18n="checkout">结账</button>
     <button class="btn ghost" id="tmSplit" style="width:100%;margin-top:10px;text-align:center" data-i18n="split_items">选菜结账</button>
@@ -538,6 +551,7 @@
     coperto_label:{zh:"每位金额 €(0 = 不收)",en:"Per person € (0 = off)",it:"€ a persona (0 = disattivato)"},
     save_coperto:{zh:"保存座位费",en:"Save cover charge",it:"Salva coperto"},
     covers_label:{zh:"人数",en:"Covers",it:"Coperti"},
+    covers_q:{zh:"几位?",en:"How many covers?",it:"Quante persone?"},
     coperto_word:{zh:"座位费",en:"Coperto",it:"Coperto"},
     pick_user:{zh:"选择用户",en:"Select user",it:"Seleziona utente"},
     set_users:{zh:"用户",en:"Users",it:"Utenti"},
@@ -798,7 +812,7 @@
     await reloadStore();
   }
   $("storeSel").onchange=reloadStore;
-  async function reloadStore(){ cart=[]; renderCart(); const cs=curStore(); if($("copertoInput"))$("copertoInput").value=(cs&&Number(cs.coperto))?Number(cs.coperto):""; refreshCoverRow(); await loadCategories(); await loadGroups(); await loadPmg(); await loadProducts(); await loadTables(); await loadUsers(); await loadToday(); loadOpenTables(); applyPerms(); }
+  async function reloadStore(){ cart=[]; renderCart(); const cs=curStore(); if($("copertoInput"))$("copertoInput").value=(cs&&Number(cs.coperto))?Number(cs.coperto):""; await loadCategories(); await loadGroups(); await loadPmg(); await loadProducts(); await loadTables(); await loadUsers(); await loadToday(); loadOpenTables(); applyPerms(); }
 
   async function loadCategories(){
     const sid=storeId(); if(!sid)return;
@@ -922,17 +936,20 @@
   $("mProdSearch").oninput=()=>{ mProdSearch=$("mProdSearch").value.trim().toLowerCase(); renderProdList(); };
   $("cartJump").onclick=()=>{ const a=$("cartAnchor"); if(a)a.scrollIntoView({behavior:"smooth",block:"start"}); };
   function copertoPrice(){ return Number((curStore()||{}).coperto)||0; }
-  function coverCount(){ return Math.max(1, parseInt($("coverN").textContent,10)||1); }
-  function updateCoverHint(){ const cp=copertoPrice(); const n=coverCount(); if($("coverN"))$("coverN").textContent=n; if($("copertoHint"))$("copertoHint").textContent=cp>0?`× ${money(cp)} = ${money(cp*n)}`:""; }
-  function refreshCoverRow(){ const show=copertoPrice()>0; if($("coverRow"))$("coverRow").classList.toggle("hidden",!show); updateCoverHint(); }
-  $("coverMinus").onclick=()=>{ $("coverN").textContent=Math.max(1,coverCount()-1); updateCoverHint(); };
-  $("coverPlus").onclick=()=>{ $("coverN").textContent=coverCount()+1; updateCoverHint(); };
+  let pendingTable=null;
+  function cmCount(){ return Math.max(1, parseInt($("cmN").textContent,10)||1); }
+  function updateCmHint(){ const cp=copertoPrice(), n=cmCount(); if($("cmN"))$("cmN").textContent=n; if($("cmHint"))$("cmHint").textContent=cp>0?`× ${money(cp)} = ${money(cp*n)}`:""; }
+  $("cmMinus").onclick=()=>{ $("cmN").textContent=Math.max(1,cmCount()-1); updateCmHint(); };
+  $("cmPlus").onclick=()=>{ $("cmN").textContent=cmCount()+1; updateCmHint(); };
+  $("cmClose").onclick=()=>{ pendingTable=null; $("coverModal").classList.add("hidden"); };
+  $("coverModal").onclick=(e)=>{ if(e.target===$("coverModal")){ pendingTable=null; $("coverModal").classList.add("hidden"); } };
+  $("cmOk").onclick=async()=>{ const cov=cmCount(); $("coverModal").classList.add("hidden"); if(pendingTable){ const tid=pendingTable; pendingTable=null; await doOpenTable(tid,cov); } };
   $("saveCopertoBtn").onclick=async()=>{
     const st=curStore(); if(!st){ show($("copertoMsg"),t("need_store"),"err"); return; }
     const v=parseFloat($("copertoInput").value); const val=isNaN(v)?0:Math.max(0,v);
     const {error}=await sb.from("stores").update({coperto:val}).eq("id",st.id);
     if(error){ show($("copertoMsg"),t("fail")+error.message,"err"); return; }
-    st.coperto=val; show($("copertoMsg"),t("saved_ok"),"ok"); refreshCoverRow();
+    st.coperto=val; show($("copertoMsg"),t("saved_ok"),"ok");
   };
 
   function tapProduct(pid){ const p=products.find(x=>x.id===pid); if(!p)return; const gs=groupsForProduct(pid); if(gs.length) openOptions(p,gs); else addLine({key:p.id,product_id:p.id,name:p.name,price:Number(p.price),qty:1,options_text:null}); }
@@ -1169,9 +1186,31 @@
     const showVoid=can('void');
     $("tmItems").innerHTML=(o.order_items||[]).map(i=>`<div class="rline"><span>${esc(i.name)}${i.options_text?` (${esc(i.options_text)})`:""} ×${i.qty}</span><span class="rline-r">${money(i.line_total)}${showVoid?` <span class="voidbtn" data-iid="${i.id}" data-nm="${esc(i.name)}" data-amt="${i.line_total}" data-qty="${i.qty}" data-opt="${esc(i.options_text||'')}">${t("void_btn")}</span>`:""}</span></div>`).join("")||`<div class="empty">—</div>`;
     $("tmTotal").textContent=money(orderTotal(o));
+    const cl=(o.order_items||[]).find(i=>i.product_id===null);
+    const showCop=(copertoPrice()>0||!!cl)&&can('order');
+    $("tmCopertoBox").classList.toggle("hidden",!showCop);
+    $("tmCovN").textContent=cl?Number(cl.qty):0;
     if(showVoid)$("tmItems").querySelectorAll('.voidbtn').forEach(b=>b.onclick=()=>voidItem(o,b.dataset));
     $("tblModal").classList.remove("hidden");
   }
+  $("tmCovMinus").onclick=()=>{ $("tmCovN").textContent=Math.max(0,(parseInt($("tmCovN").textContent,10)||0)-1); };
+  $("tmCovPlus").onclick=()=>{ $("tmCovN").textContent=(parseInt($("tmCovN").textContent,10)||0)+1; };
+  $("tmCovSave").onclick=async()=>{
+    const o=curOpen; if(!o)return;
+    const n=Math.max(0,parseInt($("tmCovN").textContent,10)||0);
+    const cl=(o.order_items||[]).find(i=>i.product_id===null);
+    const unit=cl?Number(cl.price):copertoPrice();
+    if(n===0){ if(cl){ const {error}=await sb.from("order_items").delete().eq("id",cl.id); if(error){alert(t("fail")+error.message);return;} } }
+    else { const lt=+(unit*n).toFixed(2);
+      if(cl){ const {error}=await sb.from("order_items").update({qty:n,line_total:lt}).eq("id",cl.id); if(error){alert(t("fail")+error.message);return;} }
+      else { const {error}=await sb.from("order_items").insert({order_id:o.id,product_id:null,name:t("coperto_word"),price:unit,qty:n,line_total:lt,options_text:null}); if(error){alert(t("fail")+error.message);return;} } }
+    const {data:rows}=await sb.from("order_items").select("line_total").eq("order_id",o.id);
+    const tot=(rows||[]).reduce((s,r)=>s+Number(r.line_total),0);
+    await sb.from("orders").update({total:+tot.toFixed(2)}).eq("id",o.id);
+    await loadOpenTables();
+    const fresh=openOrders.find(x=>x.id===o.id);
+    if(fresh){ openTableDetail(fresh.id); } else { $("tblModal").classList.add("hidden"); }
+  };
   let reasonCb=null;
   function askReason(title,sub,cb){ $("rsTitle").textContent=title; $("rsSub").textContent=sub||""; $("rsNote").value=""; reasonCb=cb; $("reasonModal").classList.remove("hidden"); setTimeout(()=>$("rsNote").focus(),60); }
   $("rsClose").onclick=()=>$("reasonModal").classList.add("hidden");
@@ -1247,8 +1286,13 @@
       cart=[]; renderCart(); $("tblPickModal").classList.add("hidden"); loadOpenTables();
       return;
     }
+    $("tblPickModal").classList.add("hidden");
+    if(copertoPrice()>0){ pendingTable=tableId; $("cmN").textContent="1"; updateCmHint(); $("coverModal").classList.remove("hidden"); }
+    else { await doOpenTable(tableId,0); }
+  }
+  async function doOpenTable(tableId,covers){
     const cop=copertoPrice();
-    const cov=cop>0?coverCount():0;
+    const cov=(cop>0)?Math.max(1,covers||1):0;
     const copTotal=(cop>0&&cov>0)?+(cop*cov).toFixed(2):0;
     const total=cartTotal()+copTotal;
     const {data:order,error}=await sb.from("orders").insert({store_id:storeId(),order_type:"dine",status:"open",table_id:tableId,total:+total.toFixed(2)}).select().single();
@@ -1257,7 +1301,7 @@
     if(copTotal>0)items.unshift({order_id:order.id,product_id:null,name:t("coperto_word"),price:cop,qty:cov,line_total:copTotal,options_text:null});
     const {error:e2}=await sb.from("order_items").insert(items);
     if(e2){ alert(t("fail")+e2.message); return; }
-    cart=[]; $("coverN").textContent="1"; updateCoverHint(); renderCart(); $("tblPickModal").classList.add("hidden"); loadOpenTables();
+    cart=[]; renderCart(); $("tblPickModal").classList.add("hidden"); loadOpenTables();
   }
   $("dineQuickBtn").onclick=()=>{ if(!cart.length)return; openPay({source:"quick",total:cartTotal(),tableId:null,items:cart.map(l=>({product_id:l.product_id,name:l.name,price:Number(l.price),qty:Number(l.qty),options_text:l.options_text||null}))}); };
 
