@@ -603,7 +603,7 @@
     lang=l; try{localStorage.setItem("lang",l);}catch(e){}
     applyI18n(); renderCart(); renderPermForm(); renderUserList(); applyPerms();
     if(currentUser)$("curUserName").textContent=currentUser.owner?t("owner"):currentUser.name;
-    if(storeId()){ await loadCategories(); await loadGroups(); await loadPmg(); await loadProducts(); loadToday(); if(!$("ordersTab").classList.contains("hidden"))loadOrders(); }
+    if(storeId()){ await loadCategories(); await loadGroups(); await loadPmg(); await loadProducts(); loadToday(); await loadOpenTables(); if(!$("ordersTab").classList.contains("hidden"))loadOrders(); if(!$("reportTab").classList.contains("hidden"))loadReport(); if(!$("tblModal").classList.contains("hidden")&&curOpen){ const f=openOrders.find(x=>x.id===curOpen.id); if(f)openTableDetail(f.id); } }
   }
   document.querySelectorAll(".langbar button").forEach(b=>b.onclick=()=>switchLang(b.dataset.lang));
 
